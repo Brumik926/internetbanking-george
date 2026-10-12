@@ -142,4 +142,4 @@ Vyhľadať a kúpiť
 </nav>
 </div>
 );
-}
+} 
