@@ -15,7 +15,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/bank/AppShell";
-import { balance, formatEur, monthTotals, MONTHS, useBank } from "@/lib/bank-store";
+import { balance, formatDate, formatEur, monthTotals, MONTHS, useBank } from "@/lib/bank-store";
+noimport { balance, formatEur, monthTotals, MONTHS, useBank } from "@/lib/bank-store";
 
 // Formátovanie iniciál z mena
 function formatInitials(name?: string | null, fallback = "G"): string {
