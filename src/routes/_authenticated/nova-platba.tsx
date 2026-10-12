@@ -1,520 +1,327 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import {
-  Fingerprint,
-  ShieldCheck,
-  AlertCircle,
-  ArrowRight,
-  QrCode,
-  Camera,
-  Upload,
-  X,
+import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { 
+  Search, 
+  CreditCard, 
+  Bell, 
+  Copy, 
+  Check, 
+  BarChart2, 
+  TrendingUp, 
+  Send, 
+  ArrowDownLeft, 
+  PiggyBank,
+  ArrowUpRight
 } from "lucide-react";
-import { enableBiometric, isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometric";
-import { AppShell, BrandHeader } from "@/components/bank/AppShell";
-import { RecipientPicker } from "@/components/bank/RecipientPicker";
-import {
-  addTransaction,
-  balance,
-  CATEGORIES,
-  formatEur,
-  useBank,
-} from "@/lib/bank-store";
-import { parsePaymentQr, type ParsedPaymentData } from "@/lib/qr-parser";
 import { toast } from "sonner";
+import { AppShell } from "@/components/bank/AppShell";
+import { balance, formatDate, formatEur, monthTotals, MONTHS, useBank } from "@/lib/bank-store";
 
-export const Route = createFileRoute("/_authenticated/nova-platba")({
-  head: () => ({
-    meta: [
-      { title: "Nová platba | George" },
-      { name: "description", content: "Zadajte prevod so skenovaním a biometrickým potvrdením v George." },
-    ],
-  }),
-  component: NovaPlatba,
-});
+// Formátovanie iniciál z mena
+function formatInitials(name?: string | null, fallback = "G"): string {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  const first = parts[0] ?? "";
+  const last = parts[parts.length - 1] ?? "";
+  if (!first) return fallback;
+  if (parts.length === 1) return first.slice(0, 2).toUpperCase();
+  return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
+}
 
-const field =
-  "w-full rounded-2xl border border-border bg-surface px-4 py-3 text-[15px] outline-none placeholder:text-muted-foreground focus:border-primary";
+// Získanie krstného mena
+function getFirstName(fullName?: string | null, fallback = "Používateľ"): string {
+  if (!fullName) return fallback;
+  const first = fullName.trim().split(/\s+/)[0];
+  return first || fallback;
+}
 
-export default function NovaPlatba() {
+// Formátovanie IBAN do blokov po 4 znaky
+function formatIbanBlocks(iban?: string | null): string {
+  if (!iban) return "SK31 1200 3545 0984 0539";
+  const clean = iban.replace(/\s+/g, "");
+  return clean.match(/.{1,4}/g)?.join(" ") ?? iban;
+}
+
+function GeorgePrehlad() {
   const s = useBank();
-  const navigate = useNavigate();
-  const { user } = Route.useRouteContext();
+  const total = balance(s);
+  const userInitials = formatInitials(s.owner);
+  const firstName = getFirstName(s.owner, "Adam");
+  const { income, expense } = monthTotals(s);
+  const currentMonthName = (MONTHS[new Date().getUTCMonth()] ?? "tento mesiac").toLowerCase();
 
-  const [name, setName] = useState("");
-  const [iban, setIban] = useState("");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Prevod");
-  const [note, setNote] = useState("");
-  const [vs, setVs] = useState("");
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [bioSupported, setBioSupported] = useState(false);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [scannerOpen, setScannerOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    void isBiometricSupported().then(setBioSupported);
-  }, []);
+  const isNegative = total < 0;
+  const absVal = Math.abs(total);
+  const wholeEuros = Math.floor(absVal).toLocaleString("sk-SK");
+  const cents = Math.round((absVal - Math.floor(absVal)) * 100).toString().padStart(2, "0");
 
-  const value = Number(amount.replace(",", "."));
+  const formattedIban = formatIbanBlocks(s.iban);
 
-  // 1. Validácia formulára pred autorizáciou
-  function handleInitiatePayment(e: React.FormEvent) {
+  const handleCopyIban = (e: React.MouseEvent) => {
     e.preventDefault();
-    setError("");
+    e.stopPropagation();
+    const cleanIban = (s.iban || "SK311200354509840539").replace(/\s+/g, "");
+    navigator.clipboard.writeText(cleanIban);
+    setCopied(true);
+    toast.success("IBAN bol skopírovaný do schránky");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
-    if (!name.trim()) return setError("Zadajte meno príjemcu.");
-    if (!iban.trim()) return setError("Zadajte IBAN príjemcu.");
-    if (!Number.isFinite(value) || value <= 0) return setError("Zadajte platnú sumu.");
-    if (value > balance(s)) return setError("Nedostatočný zostatok na účte.");
-
-    setShowConfirmModal(true);
-  }
-
-  // 2. Biometrické potvrdenie a zaúčtovanie platby
-  async function confirmWithBiometrics() {
-    setBusy(true);
-    setError("");
-
-    try {
-      if (bioSupported) {
-        if (!isBiometricEnabled(user.id)) {
-          await enableBiometric(user.id, user.email ?? "George");
-        } else {
-          const verified = await verifyBiometric(user.id);
-          if (!verified) throw new Error("Overenie biometriou zlyhalo.");
-        }
-      }
-
-     await addTransaction({
-        type: "out",
-        counterparty: name.trim(),
-        iban: iban.trim().toUpperCase(),
-        amount: Math.round(value * 100) / 100,
-        date: new Date().toISOString(),
-        category,
-        ...(vs.trim() ? { vs: vs.trim() } : {}),
-        ...(note.trim() ? { note: note.trim() } : {}),
-      });
-
-      setShowConfirmModal(false);
-      toast.success("Platba bola úspešne autorizovaná a odoslaná");
-      navigate({ to: "/platby" });
-    } catch (err) {
-      console.error(err);
-      toast.error("Autorizácia platby bola prerušená");
-      const msg = err instanceof Error && err.name !== "NotAllowedError" ? err.message : "";
-      setError(msg || "Overenie odtlačkom/tvárou bolo zrušené alebo zlyhalo.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  // Posledné 4 transakcie pre sekciu "Posledné pohyby"
+  const recentTransactions = [...(s.transactions ?? [])]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 4);
 
   return (
     <AppShell>
-      <BrandHeader
-        title="Nová platba"
-        subtitle={`Z účtu · ${formatEur(balance(s))}`}
-        back
-        action={
-          <button
-            type="button"
-            onClick={() => setScannerOpen(true)}
-            aria-label="Skenovať QR kód / Faktúru"
-            className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition hover:bg-muted/60 active:scale-95"
-          >
-            <QrCode className="size-4 text-primary" />
-            <span>Skenovať</span>
-          </button>
-        }
-      />
-
-      <div className="space-y-3 px-4 pb-24">
-        <button
-          type="button"
-          onClick={() => setScannerOpen(true)}
-          className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-border bg-surface py-3.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-muted/50 active:scale-[0.99]"
-        >
-          <QrCode className="size-5 text-primary" />
-          <span>Skenovať QR kód / Faktúru</span>
-        </button>
-
-        <RecipientPicker
-          userId={user.id}
-          transactions={s.transactions}
-          current={{ name, iban }}
-          onPick={(r) => {
-            setName(r.name);
-            setIban(r.iban);
-            if (r.category) setCategory(r.category);
-          }}
-        />
-
-        {/* Formulár platby */}
-        <form onSubmit={handleInitiatePayment} className="space-y-3">
-          <div className="space-y-3 rounded-3xl bg-surface p-4 shadow-sm">
-            <label className="block">
-              <span className="text-[12px] text-muted-foreground">Príjemca</span>
-              <input
-                className={`${field} mt-1`}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Meno a priezvisko alebo názov firmy"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-[12px] text-muted-foreground">IBAN / číslo účtu</span>
-              <input
-                className={`${field} mt-1 font-mono tracking-wide uppercase`}
-                value={iban}
-                onChange={(e) => setIban(e.target.value)}
-                placeholder="SK00 0000 0000 0000 0000 0000"
-              />
-            </label>
-
-            <label className="block">
-              <span className="text-[12px] text-muted-foreground">Suma (€)</span>
-              <input
-                className={`${field} mt-1 text-[24px] font-bold text-foreground`}
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0,00"
-              />
-            </label>
-
-            <div className="grid grid-cols-2 gap-2">
-              <label className="block">
-                <span className="text-[12px] text-muted-foreground">Kategória</span>
-                <select
-                  className={`${field} mt-1`}
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block">
-                <span className="text-[12px] text-muted-foreground">Variabilný symbol</span>
-                <input
-                  className={`${field} mt-1 font-mono`}
-                  inputMode="numeric"
-                  value={vs}
-                  onChange={(e) => setVs(e.target.value)}
-                  placeholder="10 čísel"
-                />
-              </label>
-            </div>
-
-            <label className="block">
-              <span className="text-[12px] text-muted-foreground">Správa pre príjemcu</span>
-              <input
-                className={`${field} mt-1`}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="Poznámka k platbe"
-              />
-            </label>
-          </div>
-
-          {error ? (
-            <div className="flex items-center gap-2 rounded-2xl bg-destructive/10 p-3 text-[13px] text-destructive">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          ) : null}
-
-          <button
-            type="submit"
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-md transition-opacity hover:opacity-95"
-          >
-            <span>Pokračovať na autorizáciu</span>
-            <ArrowRight className="size-4" />
-          </button>
-
-          <p className="flex items-center justify-center gap-1.5 text-center text-[12px] text-muted-foreground">
-            <ShieldCheck className="size-4 text-emerald-600" />
-            Platba bude overená biometriou zariadenia
-          </p>
-        </form>
-      </div>
-
-      {/* Skener QR kódov */}
-      <QrScannerModal
-        open={scannerOpen}
-        onClose={() => setScannerOpen(false)}
-        onScanSuccess={(data) => {
-          if (data.recipientName) setName(data.recipientName);
-          if (data.iban) setIban(data.iban);
-          if (data.amount) setAmount(data.amount);
-          if (data.vs) setVs(data.vs);
-          if (data.note) setNote(data.note);
-        }}
-      />
-
-      {/* Rekapitulácia a potvrdenie */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
-          <div className="w-full max-w-[400px] rounded-3xl bg-surface p-6 shadow-2xl">
-            <div className="text-center">
-              <div className="mx-auto grid size-14 place-items-center rounded-full bg-primary/15 text-primary">
-                <Fingerprint className="size-8" />
+      <div className="min-h-screen bg-[#f3f6fb] dark:bg-[#0c0f17] text-slate-900 dark:text-white pb-28 font-sans transition-colors">
+        
+        {/* Modrý podklad hlavičky George */}
+        <div className="bg-[#196ee6] dark:bg-[#111e33] px-5 pt-3 pb-16 text-white transition-colors">
+          <div className="flex items-center justify-between pt-1">
+            {/* Profil a pozdrav */}
+            <Link to="/nastavenia" className="flex items-center gap-3 active:opacity-80 transition">
+              <div className="w-11 h-11 rounded-full bg-white text-[#196ee6] font-bold text-sm flex items-center justify-center shadow-md">
+                {userInitials}
               </div>
-              <h3 className="mt-3 text-[18px] font-bold">Potvrdenie platby</h3>
-              <p className="mt-1 text-[13px] text-muted-foreground">
-                Skontrolujte detaily platby a autorizujte prevod.
-              </p>
-            </div>
+              <div>
+                <p className="text-[13px] text-white/80 leading-tight">Dobrý deň,</p>
+                <p className="text-[17px] font-bold text-white leading-tight">{firstName}</p>
+              </div>
+            </Link>
 
-            <div className="my-5 space-y-2 rounded-2xl bg-surface-2 p-4 text-[13px]">
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Suma:</span>
-                <span className="font-bold text-foreground text-[15px]">{formatEur(value)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Príjemca:</span>
-                <span className="font-semibold text-foreground">{name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">IBAN:</span>
-                <span className="font-mono text-[11px] text-foreground">{iban}</span>
-              </div>
-              {vs && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">VS:</span>
-                  <span className="font-mono text-foreground">{vs}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={confirmWithBiometrics}
-                disabled={busy}
-                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-md transition-opacity hover:opacity-95 disabled:opacity-60"
+            {/* Ikony vpravo hore */}
+            <div className="flex items-center gap-2">
+              <Link 
+                to="/platby" 
+                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition backdrop-blur-sm"
+                aria-label="Hľadať"
               >
-                <Fingerprint className="size-5" />
-                {busy ? "Overujem biometriu…" : "Potvrdiť biometriou"}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowConfirmModal(false)}
-                disabled={busy}
-                className="h-11 w-full rounded-2xl bg-transparent text-[13px] font-semibold text-muted-foreground hover:bg-surface-2"
+                <Search className="w-5 h-5 stroke-[2.2]" />
+              </Link>
+              <Link 
+                to="/karty" 
+                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition backdrop-blur-sm"
+                aria-label="Karty"
               >
-                Zrušiť
-              </button>
+                <CreditCard className="w-5 h-5 stroke-[2.2]" />
+              </Link>
+              <Link 
+                to="/upozornenia" 
+                className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition backdrop-blur-sm"
+                aria-label="Upozornenia"
+              >
+                <Bell className="w-5 h-5 stroke-[2.2]" />
+              </Link>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Hlavná karta Účet prekrývajúca modrý banner */}
+        <div className="px-4 -mt-10">
+          <div className="rounded-3xl bg-white dark:bg-[#161a23] p-5 shadow-sm border border-slate-100 dark:border-zinc-800/60">
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-[12px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase">
+                  Bežný účet
+                </span>
+                
+                <div className={`mt-1 flex items-baseline ${isNegative ? "text-[#e11d48] dark:text-[#ff5a70]" : "text-slate-900 dark:text-white"}`}>
+                  <span className="text-[36px] font-extrabold leading-none tracking-tight">
+                    {isNegative ? "-" : ""}{wholeEuros},
+                  </span>
+                  <span className="text-[22px] font-bold leading-none ml-0.5">
+                    {cents}&nbsp;€
+                  </span>
+                </div>
+                
+                <p className="mt-1 text-[13px] text-slate-500 dark:text-zinc-400">
+                  {formatEur(total)} vlastné zdroje
+                </p>
+              </div>
+
+              {/* Logo George 'g' */}
+              <div className="w-9 h-9 rounded-full bg-[#196ee6]/10 dark:bg-[#196ee6]/20 flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8] shrink-0 font-bold text-lg">
+                g
+              </div>
+            </div>
+
+            {/* Zobrazenie a kopírovanie IBAN */}
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/60">
+              <p className="text-[14px] font-mono font-medium tracking-wider text-slate-600 dark:text-zinc-300">
+                {formattedIban}
+              </p>
+              <button
+                type="button"
+                onClick={handleCopyIban}
+                className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#196ee6] dark:text-[#38bdf8] hover:underline"
+              >
+                {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
+                <span>{copied ? "Skopírované" : "Kopírovať IBAN"}</span>
+              </button>
+            </div>
+
+            {/* Akcie karty: Nová platba | Prijať */}
+            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-zinc-800/60 grid grid-cols-2 gap-2 text-center">
+              <Link
+                to="/nova-platba"
+                className="py-2.5 px-3 rounded-xl bg-[#f0f5ff] dark:bg-[#182a40] text-[#196ee6] dark:text-[#38bdf8] font-bold text-[14px] active:scale-[0.98] transition text-center"
+              >
+                Nová platba
+              </Link>
+              <Link
+                to="/prijat"
+                className="py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-zinc-800/80 text-slate-700 dark:text-zinc-200 font-bold text-[14px] active:scale-[0.98] transition text-center"
+              >
+                Prijať
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Dva widgety: Výdavky / Príjmy */}
+        <div className="px-4 mt-4 grid grid-cols-2 gap-3">
+          <Link
+            to="/rozpocet"
+            className="rounded-2xl bg-white dark:bg-[#161a23] p-4 shadow-sm border border-slate-100 dark:border-zinc-800/60 active:scale-[0.98] transition"
+          >
+            <div className="flex items-center justify-between text-[13px] font-medium text-slate-600 dark:text-zinc-400">
+              <span>Výdavky za {currentMonthName}</span>
+              <span className="flex w-6 h-6 items-center justify-center rounded-full bg-[#fde8ef] dark:bg-[#381a28] text-[#be0055]">
+                <BarChart2 className="w-3.5 h-3.5" />
+              </span>
+            </div>
+            <div className="mt-2 text-[22px] font-bold text-slate-900 dark:text-white leading-none">
+              {formatEur(expense)}
+            </div>
+            <p className="mt-2 text-[12px] text-slate-400 dark:text-zinc-500">
+              {s.budgets?.length ? `${s.budgets.length} nastavené limity` : "4 nastavené limity"}
+            </p>
+          </Link>
+
+          <div className="rounded-2xl bg-white dark:bg-[#161a23] p-4 shadow-sm border border-slate-100 dark:border-zinc-800/60">
+            <div className="flex items-center justify-between text-[13px] font-medium text-slate-600 dark:text-zinc-400">
+              <span>Príjmy za {currentMonthName}</span>
+              <span className="flex w-6 h-6 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
+                <TrendingUp className="w-3.5 h-3.5" />
+              </span>
+            </div>
+            <div className="mt-2 text-[22px] font-bold text-emerald-600 dark:text-emerald-400 leading-none">
+              {formatEur(income)}
+            </div>
+            <p className="mt-2 text-[12px] text-slate-400 dark:text-zinc-500">
+              Tento mesiac
+            </p>
+          </div>
+        </div>
+
+        {/* Riadok 4 rýchlych akcií */}
+        <div className="px-4 mt-5">
+          <div className="grid grid-cols-4 gap-2 text-center">
+            <Link to="/nova-platba" className="flex flex-col items-center gap-1.5 group">
+              <div className="w-13 h-13 rounded-2xl bg-[#edf4ff] dark:bg-[#182844] flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8] group-active:scale-95 transition">
+                <Send className="w-6 h-6" />
+              </div>
+              <span className="text-[12px] font-medium text-slate-700 dark:text-zinc-300 leading-tight">Nová platba</span>
+            </Link>
+
+            <Link to="/prijat" className="flex flex-col items-center gap-1.5 group">
+              <div className="w-13 h-13 rounded-2xl bg-[#edf4ff] dark:bg-[#182844] flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8] group-active:scale-95 transition">
+                <ArrowDownLeft className="w-6 h-6" />
+              </div>
+              <span className="text-[12px] font-medium text-slate-700 dark:text-zinc-300 leading-tight">Prijať</span>
+            </Link>
+
+            <Link to="/karty" className="flex flex-col items-center gap-1.5 group">
+              <div className="w-13 h-13 rounded-2xl bg-[#edf4ff] dark:bg-[#182844] flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8] group-active:scale-95 transition">
+                <CreditCard className="w-6 h-6" />
+              </div>
+              <span className="text-[12px] font-medium text-slate-700 dark:text-zinc-300 leading-tight">Karty</span>
+            </Link>
+
+            <Link to="/sporenie" className="flex flex-col items-center gap-1.5 group">
+              <div className="w-13 h-13 rounded-2xl bg-[#edf4ff] dark:bg-[#182844] flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8] group-active:scale-95 transition">
+                <PiggyBank className="w-6 h-6" />
+              </div>
+              <span className="text-[12px] font-medium text-slate-700 dark:text-zinc-300 leading-tight">Sporenie</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Sekcia: Posledné pohyby */}
+        <div className="px-4 mt-6">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <h2 className="text-[17px] font-bold text-slate-900 dark:text-white">Posledné pohyby</h2>
+            <Link to="/platby" className="text-[13px] font-semibold text-[#196ee6] dark:text-[#38bdf8] hover:underline">
+              Zobraziť všetky
+            </Link>
+          </div>
+
+          <div className="rounded-2xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-hidden">
+            {recentTransactions.length === 0 ? (
+              <p className="p-4 text-center text-sm text-slate-400">Žiadne nedávne transakcie</p>
+            ) : (
+              recentTransactions.map((tx) => {
+                const isIncome = tx.type === "in";
+                return (
+                  <Link
+                    key={tx.id}
+                    to="/transakcia/$id"
+                    params={{ id: tx.id }}
+                    className="flex items-center justify-between p-3.5 hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition active:bg-slate-100"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        isIncome 
+                          ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400" 
+                          : "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300"
+                      }`}>
+                        {isIncome ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="text-[14px] font-bold text-slate-900 dark:text-white line-clamp-1">
+                          {tx.counterparty}
+                        </p>
+                        <p className="text-[12px] text-slate-400 dark:text-zinc-500">
+                          {formatDate(tx.date)} • {tx.category}
+                        </p>
+                      </div>
+                    </div>
+
+                    <span className={`text-[15px] font-bold ${
+                      isIncome 
+                        ? "text-emerald-600 dark:text-emerald-400" 
+                        : "text-slate-900 dark:text-white"
+                    }`}>
+                      {isIncome ? "+" : "-"}{formatEur(tx.amount)}
+                    </span>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+      </div>
     </AppShell>
   );
 }
 
-function QrScannerModal({
-  open,
-  onClose,
-  onScanSuccess,
-}: {
-  open: boolean;
-  onClose: () => void;
-  onScanSuccess: (data: ParsedPaymentData) => void;
-}) {
-  const [mode, setMode] = useState<"camera" | "file">("camera");
-  const [errorMsg, setErrorMsg] = useState<string>("");
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+const HOME_TITLE = "Internetbanking George";
+const HOME_DESC =
+  "Získajte s ním prehľad o svojich financiách 24 hodín denne, 7 dní v týždni. Rýchlo a pohodlne vybavte všetko, čo potrebujete.";
 
-  useEffect(() => {
-    if (!open || mode !== "camera") {
-      stopCamera();
-      return;
-    }
-
-    let active = true;
-
-    async function initCamera() {
-      setErrorMsg("");
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: "environment" } },
-        });
-        if (!active) {
-          stream.getTracks().forEach((t) => t.stop());
-          return;
-        }
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          await videoRef.current.play();
-          startDetection();
-        }
-      } catch (err) {
-        console.error(err);
-        setErrorMsg("Kamera nie je dostupná alebo nebol udelený prístup. Skúste nahrať fotografiu.");
-      }
-    }
-
-    void initCamera();
-
-    return () => {
-      active = false;
-      stopCamera();
-    };
-  }, [open, mode]);
-
-  function stopCamera() {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-    }
-  }
-
-  async function startDetection() {
-    if (typeof window !== "undefined" && "BarcodeDetector" in window) {
-      try {
-        const detector = new (window.BarcodeDetector as any)({ formats: ["qr_code"] });
-
-        const interval = setInterval(async () => {
-          if (!videoRef.current || !streamRef.current) {
-            clearInterval(interval);
-            return;
-          }
-          try {
-            const barcodes = await detector.detect(videoRef.current);
-            if (barcodes.length > 0) {
-              const parsed = parsePaymentQr(barcodes[0].rawValue);
-              if (parsed && (parsed.iban || parsed.amount)) {
-                clearInterval(interval);
-                stopCamera();
-                navigator.vibrate?.(50);
-                toast.success("Údaje z QR kódu boli načítané");
-                onScanSuccess(parsed);
-                onClose();
-              }
-            }
-          } catch {
-            // cyklus pokračuje
-          }
-        }, 350);
-      } catch {
-        setErrorMsg("Váš prehliadač nepodporuje priame čítanie z kamery, nahrajte fotografiu.");
-      }
-    } else {
-      setErrorMsg("Kamera v tomto prehliadači nepodporuje čítanie QR. Použite nahratie obrázka.");
-    }
-  }
-
-  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setErrorMsg("");
-    if (typeof window !== "undefined" && "BarcodeDetector" in window) {
-      try {
-        const img = new Image();
-        img.src = URL.createObjectURL(file);
-        await img.decode();
-
-        const detector = new (window.BarcodeDetector as any)({ formats: ["qr_code"] });
-        const barcodes = await detector.detect(img);
-
-        if (barcodes.length > 0) {
-          const parsed = parsePaymentQr(barcodes[0].rawValue);
-          if (parsed && (parsed.iban || parsed.amount)) {
-            toast.success("Faktúra úspešne spracovaná");
-            onScanSuccess(parsed);
-            onClose();
-            return;
-          }
-        }
-        setErrorMsg("V obrázku sa nenašiel platný QR kód.");
-      } catch {
-        setErrorMsg("Chyba pri spracovaní obrázka.");
-      }
-    } else {
-      setErrorMsg("Čítanie zo súboru nie je podporované v tomto prehliadači.");
-    }
-  }
-
-  if (!open) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-surface p-5 shadow-2xl">
-        <div className="flex items-center justify-between pb-3">
-          <h3 className="font-bold text-foreground">Skenovať faktúru / QR</h3>
-          <button
-            type="button"
-            onClick={() => {
-              stopCamera();
-              onClose();
-            }}
-            className="rounded-full p-1 text-muted-foreground hover:bg-muted"
-          >
-            <X className="size-5" />
-          </button>
-        </div>
-
-        <div className="mb-4 grid grid-cols-2 gap-2 rounded-xl bg-muted/60 p-1">
-          <button
-            type="button"
-            onClick={() => setMode("camera")}
-            className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-              mode === "camera" ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            <Camera className="size-4" /> Kamera
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              stopCamera();
-              setMode("file");
-            }}
-            className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-semibold transition-colors ${
-              mode === "file" ? "bg-surface text-foreground shadow-sm" : "text-muted-foreground"
-            }`}
-          >
-            <Upload className="size-4" /> Nahrať fotku
-          </button>
-        </div>
-
-        {mode === "camera" && (
-          <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-black">
-            <video ref={videoRef} playsInline muted className="size-full object-cover" />
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="size-48 rounded-2xl border-2 border-dashed border-primary/90" />
-            </div>
-          </div>
-        )}
-
-        {mode === "file" && (
-          <label className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/30 p-4 text-center hover:bg-muted/50">
-            <Upload className="mb-2 size-8 text-primary" />
-            <span className="text-sm font-semibold">Vyberte fotografiu faktúry</span>
-            <span className="mt-1 text-xs text-muted-foreground">PNG, JPG alebo screenshot QR kódu</span>
-            <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-          </label>
-        )}
-
-        {errorMsg && (
-          <div className="mt-3 flex items-start gap-2 rounded-xl bg-destructive/10 p-2.5 text-xs text-destructive">
-            <AlertCircle className="size-4 shrink-0 mt-0.5" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+export const Route = createFileRoute("/_authenticated/")({
+  head: () => ({
+    meta: [
+      { title: HOME_TITLE },
+      { name: "description", content: HOME_DESC },
+      { property: "og:title", content: HOME_TITLE },
+      { property: "og:description", content: HOME_DESC },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  component: GeorgePrehlad,
+});
