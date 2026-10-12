@@ -126,15 +126,15 @@ Vyhľadať a kúpiť
 <Activity size={24} strokeWidth={1.5} />
 <span className="text-[11px] mt-1 font-medium">FIT</span>
 </button>
-​<button className={"flex flex-col items-center p-2 transition-colors " + (isDark ? "text-gray-400 hover:text-gray-300" : "text-[#8e95a3] hover:text-gray-600")}>
+​<button className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600">
 <PieChart size={24} strokeWidth={1.5} />
 <span className="text-[11px] mt-1 font-medium">Invest</span>
 </button>
-​<button className={"flex flex-col items-center p-2 transition-colors " + (isDark ? "text-gray-400 hover:text-gray-300" : "text-[#8e95a3] hover:text-gray-600")}>
+​<button className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600">
 <Compass size={24} strokeWidth={1.5} />
 <span className="text-[11px] mt-1 font-medium">Objavujte</span>
 </button>
-​<button className={"flex flex-col items-center p-2 transition-colors " + (isDark ? "text-gray-400 hover:text-gray-300" : "text-[#8e95a3] hover:text-gray-600")}>
+​<button className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600">
 <MessageSquare size={24} strokeWidth={1.5} />
 <span className="text-[11px] mt-1 font-medium">Kontakty</span>
 </button>
