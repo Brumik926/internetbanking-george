@@ -16,7 +16,6 @@ import {
 import { toast } from "sonner";
 import { AppShell } from "@/components/bank/AppShell";
 import { balance, formatDate, formatEur, monthTotals, MONTHS, useBank } from "@/lib/bank-store";
-noimport { balance, formatEur, monthTotals, MONTHS, useBank } from "@/lib/bank-store";
 
 // Formátovanie iniciál z mena
 function formatInitials(name?: string | null, fallback = "G"): string {
@@ -181,7 +180,7 @@ function GeorgePrehlad() {
           </div>
         </div>
 
-        {/* Dva widgety: Výdavky za október / Príjmy za október */}
+        {/* Dva widgety: Výdavky / Príjmy */}
         <div className="px-4 mt-4 grid grid-cols-2 gap-3">
           <Link
             to="/rozpocet"
@@ -260,7 +259,7 @@ function GeorgePrehlad() {
           </div>
 
           <div className="rounded-2xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-hidden">
-             {recentTransactions.length === 0 ? (
+            {recentTransactions.length === 0 ? (
               <p className="p-4 text-center text-sm text-slate-400">Žiadne nedávne transakcie</p>
             ) : (
               recentTransactions.map((tx) => {
@@ -301,6 +300,13 @@ function GeorgePrehlad() {
                 );
               })
             )}
+          </div>
+        </div>
+
+      </div>
+    </AppShell>
+  );
+}
 
 const HOME_TITLE = "Internetbanking George";
 const HOME_DESC =
