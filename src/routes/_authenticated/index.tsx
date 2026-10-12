@@ -260,11 +260,11 @@ function GeorgePrehlad() {
           </div>
 
           <div className="rounded-2xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-hidden">
-            {recentTransactions.length === 0 ? (
+             {recentTransactions.length === 0 ? (
               <p className="p-4 text-center text-sm text-slate-400">Žiadne nedávne transakcie</p>
             ) : (
               recentTransactions.map((tx) => {
-                const isIncome = tx.amount > 0;
+                const isIncome = tx.type === "in";
                 return (
                   <Link
                     key={tx.id}
@@ -282,10 +282,10 @@ function GeorgePrehlad() {
                       </div>
                       <div>
                         <p className="text-[14px] font-bold text-slate-900 dark:text-white line-clamp-1">
-                          {tx.title}
+                          {tx.counterparty}
                         </p>
                         <p className="text-[12px] text-slate-400 dark:text-zinc-500">
-                          {tx.date} • {tx.category}
+                          {formatDate(tx.date)} • {tx.category}
                         </p>
                       </div>
                     </div>
@@ -295,19 +295,12 @@ function GeorgePrehlad() {
                         ? "text-emerald-600 dark:text-emerald-400" 
                         : "text-slate-900 dark:text-white"
                     }`}>
-                      {isIncome ? "+" : ""}{formatEur(tx.amount)}
+                      {isIncome ? "+" : "-"}{formatEur(tx.amount)}
                     </span>
                   </Link>
                 );
               })
             )}
-          </div>
-        </div>
-
-      </div>
-    </AppShell>
-  );
-}
 
 const HOME_TITLE = "Internetbanking George";
 const HOME_DESC =
