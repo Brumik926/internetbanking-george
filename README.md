@@ -1,8 +1,6 @@
-# George. 
+Slovenská sporiteľňa
+Sme najväčšia banka na Slovensku s obľúbeným internetbankingom George. Chceme byť spoľahlivý partner pre vaše peniaze, aby ste sa mohli tešiť na budúcnosť.
 
-Potrebujem bankovú aplikáciu ktorá bude funkčná na prevody , históriu platieb , prijaté prevody . Uspori financovanie a rozpočet výdavkov a primov .
-
-This project was built with [Lovable](https://lovable.dev).
 
 **Live app**: https://internetbanking-george.lovable.app
 
