@@ -6,8 +6,7 @@ Contact, FileText, Bell, Users, Layout, Globe, AppWindow, Type, Camera, Info, Sh
 } from 'lucide-react';
 ​export default function Index() {
 const [isDark, setIsDark] = useState(false);
-const [currentView, setومCurrentView] = useState('dashboard'); // 'dashboard' alebo 'profile'
-const [currentViewMode, setCurrentViewMode] = useState('dashboard');
+const [currentViewMode, setCurrentViewMode] = useState('dashboard'); // 'dashboard' alebo 'profile'
 ​const ListItem = ({ icon: Icon, title, subtitle, badge, isLast = false }: { icon: any, title: string, subtitle?: string, badge?: string, isLast?: boolean }) => (
 <button className={
 "w-full flex items-center justify-between py-4 " +
