@@ -1,4 +1,3 @@
-import { sendPaymentEmail } from "@/lib/send-payment-email";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -24,6 +23,7 @@ import {
 } from "@/lib/bank-store";
 import { parsePaymentQr, type ParsedPaymentData } from "@/lib/qr-parser";
 import { toast } from "sonner";
+import { sendPaymentEmail } from "@/lib/send-payment-email";
 
 export const Route = createFileRoute("/_authenticated/nova-platba")({
   head: () => ({
@@ -93,20 +93,37 @@ export default function NovaPlatba() {
     setShowConfirmModal(true);
   }
 
-  // 2. Vykonanie uloženia transakcie
+  // 2. Vykonanie uloženia transakcie + odoslanie e-mailu
   async function executePayment() {
     setBusy(true);
     try {
+      const finalAmount = Math.round(value * 100) / 100;
+      const finalIban = iban.trim().toUpperCase();
+      const finalRecipient = name.trim();
+
       await addTransaction({
         type: "out",
-        counterparty: name.trim(),
-        iban: iban.trim().toUpperCase(),
-        amount: Math.round(value * 100) / 100,
+        counterparty: finalRecipient,
+        iban: finalIban,
+        amount: finalAmount,
         date: new Date().toISOString(),
         category,
         ...(vs.trim() ? { vs: vs.trim() } : {}),
         ...(note.trim() ? { note: note.trim() } : {}),
       });
+
+      // Odoslanie e-mailu cez Resend
+      if (user?.email) {
+        void sendPaymentEmail({
+          data: {
+            to: user.email,
+            recipientName: finalRecipient,
+            iban: finalIban,
+            amount: finalAmount,
+            date: new Date().toLocaleString("sk-SK"),
+          },
+        });
+      }
 
       setShowConfirmModal(false);
       toast.success("Platba bola úspešne odoslaná");
