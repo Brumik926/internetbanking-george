@@ -46,7 +46,6 @@ function GeorgePrehladModern() {
   const currentMonthName = (MONTHS[new Date().getUTCMonth()] ?? "tento mesiac").toLowerCase();
   const userInitials = formatInitials(s.owner);
 
-  // Rozdelenie sumy na celé eurá a centy pre George typografiu
   const isNegative = total < 0;
   const absVal = Math.abs(total);
   const wholeEuros = Math.floor(absVal).toLocaleString("sk-SK");
@@ -64,7 +63,6 @@ function GeorgePrehladModern() {
     .toString()
     .padStart(2, "0");
 
-  // Posledné transakcie z databázy
   const recentTransactions = [...(s.transactions ?? [])]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 4);
@@ -78,7 +76,6 @@ function GeorgePrehladModern() {
             george
           </span>
 
-          {/* Ikony vpravo */}
           <div className="flex items-center gap-3">
             <Link
               to="/platby"
@@ -105,7 +102,6 @@ function GeorgePrehladModern() {
           </div>
         </header>
 
-        {/* Nadpis */}
         <h1 className="text-[34px] font-extrabold mt-6 tracking-tight">
           Prehľad
         </h1>
@@ -113,9 +109,8 @@ function GeorgePrehladModern() {
 
       {/* Hlavný obsah */}
       <main className="px-4 -mt-14 relative z-10">
-        {/* Sekcia: Výdavky a Príjmy za aktuálny mesiac */}
+        {/* Sekcia: Výdavky a Príjmy */}
         <div className="grid grid-cols-2 gap-3 mb-6">
-          {/* Výdavky */}
           <Link
             to="/rozpocet"
             className="rounded-3xl p-4 flex flex-col justify-between h-[115px] transition-colors duration-300 block active:scale-[0.98] bg-white dark:bg-[#1c1c24] shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5"
@@ -132,10 +127,8 @@ function GeorgePrehladModern() {
               </div>
             </div>
             <div>
-              <div className="text-xl font-bold flex items-start text-gray-900 dark:text-white">
-                {expWhole},
-                <sup className="text-sm mt-1 ml-0.5">{expCents}</sup>
-                <span className="ml-1">€</span>
+              <div className="text-xl font-bold flex items-baseline text-gray-900 dark:text-white">
+                {expWhole},{expCents} €
               </div>
               <div className="text-[11px] mt-1 text-gray-500">
                 {s.budgets?.length
@@ -145,7 +138,6 @@ function GeorgePrehladModern() {
             </div>
           </Link>
 
-          {/* Príjmy */}
           <div className="rounded-3xl p-4 flex flex-col justify-between h-[115px] transition-colors duration-300 bg-white dark:bg-[#1c1c24] shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5">
             <div className="flex justify-between items-start">
               <span className="text-[13px] font-medium text-gray-700 dark:text-gray-300">
@@ -159,17 +151,14 @@ function GeorgePrehladModern() {
               </div>
             </div>
             <div>
-              <div className="text-xl font-bold flex items-start text-emerald-600 dark:text-emerald-400">
-                {incWhole},
-                <sup className="text-sm mt-1 ml-0.5">{incCents}</sup>
-                <span className="ml-1">€</span>
+              <div className="text-xl font-bold flex items-baseline text-emerald-600 dark:text-emerald-400">
+                {incWhole},{incCents} €
               </div>
               <div className="text-[11px] mt-1 text-gray-500">Tento mesiac</div>
             </div>
           </div>
         </div>
 
-        {/* Sekcia: Vaše produkty */}
         <h2 className="text-[13px] mb-3 px-2 font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
           Vaše produkty
         </h2>
@@ -192,16 +181,14 @@ function GeorgePrehladModern() {
 
           <div className="my-3">
             <div
-              className={`text-[32px] font-bold flex items-start tracking-tight leading-none ${
+              className={`text-[32px] font-bold flex items-baseline tracking-tight ${
                 isNegative
                   ? "text-[#e63946] dark:text-[#ff5252]"
                   : "text-gray-900 dark:text-white"
               }`}
             >
               {isNegative ? "-" : ""}
-              {wholeEuros},
-              <sup className="text-[18px] mt-1 ml-0.5">{cents}</sup>
-              <span className="ml-1 text-2xl mt-1.5">€</span>
+              {wholeEuros},{cents} €
             </div>
             <div className="text-[13px] mt-2 text-gray-500 dark:text-gray-400">
               {formatEur(total)} vlastné zdroje
@@ -235,9 +222,8 @@ function GeorgePrehladModern() {
             </div>
           </div>
           <div className="mb-4">
-            <div className="text-[30px] font-bold flex items-start tracking-tight leading-none text-gray-900 dark:text-white">
-              0,<sup className="text-[17px] mt-1 ml-0.5">00</sup>
-              <span className="ml-1 text-2xl mt-1.5">€</span>
+            <div className="text-[30px] font-bold flex items-baseline tracking-tight text-gray-900 dark:text-white">
+              0,00 €
             </div>
           </div>
           <Link
