@@ -141,7 +141,7 @@ function GeorgePrehladModern() {
     navigate({ to: "/login" });
   }
 
-  // --- OBSAH PROFILU ---
+  // --- OBSAH PROFILU (Posledná strana v menu možnosti) ---
   const profileContent = (
     <div className="min-h-screen font-sans pb-16 transition-colors duration-300 bg-[#f4f6f9] dark:bg-[#0e0e12] text-gray-900 dark:text-white">
       <main className="px-4 max-w-md mx-auto pt-6">
@@ -280,13 +280,10 @@ function GeorgePrehladModern() {
 
         {/* Pätička */}
         <div className="text-center pb-8 flex flex-col items-center">
-          <div className="flex items-center justify-center gap-1.5 mb-4">
-            <span className="font-bold text-[15px] tracking-tight text-[#111827] dark:text-white">
-              SLOVENSKÁ
+          <div className="flex items-center justify-center mb-4">
+            <span className="font-bold text-[16px] tracking-tight text-[#111827] dark:text-white">
+              Slovenská sporiteľňa
             </span>
-            <div className="w-5 h-5 bg-white text-[#196ee6] flex items-center justify-center rounded-sm border border-gray-200 dark:border-white/10 shadow-xs">
-              <span className="font-serif text-[14px] font-bold italic leading-none select-none">š</span>
-            </div>
           </div>
           <p className="text-[11px] text-gray-500 mb-0.5">© 2026 Slovenská sporiteľňa, a. s.</p>
           <p className="text-[11px] text-gray-500 mb-0.5">Verzia 26.30.13 (2630130)</p>
@@ -305,11 +302,10 @@ function GeorgePrehladModern() {
           {/* Hlavička */}
           <div className="pt-6 pb-24 px-4 transition-colors duration-300 bg-[#196ee6] dark:bg-[#0e0e12] text-white rounded-b-3xl dark:rounded-none">
             <header className="flex justify-between items-center">
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold text-[17px] tracking-tight text-white">SLOVENSKÁ</span>
-                <div className="w-5 h-5 bg-white text-[#196ee6] flex items-center justify-center rounded-sm shadow-xs">
-                  <span className="font-serif text-[14px] font-bold italic leading-none select-none">š</span>
-                </div>
+              <div className="flex items-center">
+                <span className="font-bold text-[18px] tracking-tight text-white">
+                  Slovenská sporiteľňa
+                </span>
               </div>
 
               <div className="flex items-center gap-3">
