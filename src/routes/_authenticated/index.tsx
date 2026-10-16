@@ -63,6 +63,16 @@ function formatInitials(name?: string | null, fallback = "TL"): string {
   return `${first.charAt(0)}${last.charAt(0)}`.toUpperCase();
 }
 
+function splitAmount(val: number) {
+  const abs = Math.abs(val);
+  const [w, d] = abs.toFixed(2).split(".");
+  return {
+    whole: Number(w).toLocaleString("sk-SK"),
+    cents: d,
+    isNegative: val < 0,
+  };
+}
+
 interface ListItemProps {
   icon: any;
   title: string;
@@ -117,22 +127,9 @@ function GeorgePrehladModern() {
   const userInitials = formatInitials(s.owner);
   const userName = s.owner || "Tomáš Lizák";
 
-  const isNegative = total < 0;
-  const absVal = Math.abs(total);
-  const wholeEuros = Math.floor(absVal).toLocaleString("sk-SK");
-  const cents = Math.round((absVal - Math.floor(absVal)) * 100)
-    .toString()
-    .padStart(2, "0");
-
-  const expWhole = Math.floor(expense).toLocaleString("sk-SK");
-  const expCents = Math.round((expense - Math.floor(expense)) * 100)
-    .toString()
-    .padStart(2, "0");
-
-  const incWhole = Math.floor(income).toLocaleString("sk-SK");
-  const incCents = Math.round((income - Math.floor(income)) * 100)
-    .toString()
-    .padStart(2, "0");
+  const totalParts = splitAmount(total);
+  const expParts = splitAmount(expense);
+  const incParts = splitAmount(income);
 
   const recentTransactions = [...(s.transactions ?? [])]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -370,8 +367,11 @@ function GeorgePrehladModern() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-xl font-bold flex items-baseline text-[#e63946] dark:text-[#ff5252]">
-                    {expWhole},{expCents} €
+                  <div className="text-xl font-bold flex items-baseline tracking-tight text-[#e63946] dark:text-[#ff5252]">
+                    <span>{expParts.whole}</span>
+                    <span>,</span>
+                    <sup className="text-xs font-bold top-[-0.45em] ml-0.5">{expParts.cents}</sup>
+                    <span className="ml-1 text-sm font-normal">€</span>
                   </div>
                   <div className="text-[11px] mt-1 text-gray-500">Tento mesiac</div>
                 </div>
@@ -388,8 +388,11 @@ function GeorgePrehladModern() {
                   </div>
                 </div>
                 <div>
-                  <div className="text-xl font-bold flex items-baseline text-emerald-600 dark:text-emerald-400">
-                    {incWhole},{incCents} €
+                  <div className="text-xl font-bold flex items-baseline tracking-tight text-emerald-600 dark:text-emerald-400">
+                    <span>{incParts.whole}</span>
+                    <span>,</span>
+                    <sup className="text-xs font-bold top-[-0.45em] ml-0.5">{incParts.cents}</sup>
+                    <span className="ml-1 text-sm font-normal">€</span>
                   </div>
                   <div className="text-[11px] mt-1 text-gray-500">Tento mesiac</div>
                 </div>
@@ -427,13 +430,18 @@ function GeorgePrehladModern() {
                 <div className="my-3">
                   <div
                     className={`text-[32px] font-bold flex items-baseline tracking-tight ${
-                      isNegative
+                      totalParts.isNegative
                         ? "text-[#e63946] dark:text-[#ff5252]"
                         : "text-gray-900 dark:text-white"
                     }`}
                   >
-                    {isNegative ? "-" : ""}
-                    {wholeEuros},{cents} €
+                    {totalParts.isNegative && <span className="mr-0.5">-</span>}
+                    <span>{totalParts.whole}</span>
+                    <span>,</span>
+                    <sup className="text-[18px] font-bold top-[-0.45em] ml-0.5 leading-none">
+                      {totalParts.cents}
+                    </sup>
+                    <span className="ml-1 text-[22px] font-semibold">€</span>
                   </div>
                   <div className="text-[13px] mt-2 text-gray-500 dark:text-gray-400">
                     {formatEur(total)} vlastné zdroje
@@ -469,7 +477,10 @@ function GeorgePrehladModern() {
               </div>
               <div className="mb-4">
                 <div className="text-[30px] font-bold flex items-baseline tracking-tight text-gray-900 dark:text-white">
-                  0,00 €
+                  <span>0</span>
+                  <span>,</span>
+                  <sup className="text-[17px] font-bold top-[-0.45em] ml-0.5 leading-none">00</sup>
+                  <span className="ml-1 text-[20px] font-semibold">€</span>
                 </div>
               </div>
               <Link
@@ -502,6 +513,7 @@ function GeorgePrehladModern() {
                 ) : (
                   recentTransactions.map((tx) => {
                     const isIncome = tx.type === "in";
+                    const txParts = splitAmount(tx.amount);
                     return (
                       <Link
                         key={tx.id}
@@ -534,14 +546,19 @@ function GeorgePrehladModern() {
                         </div>
 
                         <span
-                          className={`text-[15px] font-bold ${
+                          className={`text-[15px] font-bold flex items-baseline ${
                             isIncome
                               ? "text-emerald-500"
                               : "text-gray-900 dark:text-white"
                           }`}
                         >
-                          {isIncome ? "+" : "-"}
-                          {formatEur(tx.amount)}
+                          <span>{isIncome ? "+" : "-"}</span>
+                          <span>{txParts.whole}</span>
+                          <span>,</span>
+                          <sup className="text-[10px] font-semibold top-[-0.4em] ml-0.5 leading-none">
+                            {txParts.cents}
+                          </sup>
+                          <span className="ml-0.5 text-xs font-normal">€</span>
                         </span>
                       </Link>
                     );
