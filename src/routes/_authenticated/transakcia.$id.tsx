@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/transakcia/$id")({
   component: Detail,
 });
 
-type Extra = { exclude?: boolean; note?: string; attachment?: string };
+type Extra = { exclude?: boolean | undefined; note?: string | undefined; attachment?: string | undefined };
 const extraKey = (id: string) => `george-txn-extra:${id}`;
 
 function formatIban(iban: string) {
