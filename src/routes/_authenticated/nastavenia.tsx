@@ -21,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { resetStore, saveProfile, useBank } from "@/lib/bank-store";
 import { resetNotifications, unreadCount, useNotifications } from "@/lib/notifications";
+import { useTheme } from "@/lib/theme";
 import {
   clearUnlocked,
   disableBiometric,
@@ -60,22 +61,8 @@ function Nastavenia() {
     setIban(s.iban || "SK31 1200 3545 0984 0539");
   }, [s.owner, s.iban]);
 
-  // Téma (Denný / Nočný režim)
-  const [light, setLight] = useState(false);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("george-theme");
-    const isLight = saved === "light";
-    setLight(isLight);
-    document.documentElement.classList.toggle("light", isLight);
-  }, []);
-
-  function toggleTheme() {
-    const nextLight = !light;
-    setLight(nextLight);
-    document.documentElement.classList.toggle("light", nextLight);
-    window.localStorage.setItem("george-theme", nextLight ? "light" : "dark");
-  }
+  // Téma (Denný / Nočný režim) — spravuje ThemeProvider v koreni
+  const { isLight: light, toggleTheme } = useTheme();
 
   // Biometria
   const [userId, setUserId] = useState<string | null>(null);

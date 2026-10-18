@@ -13,6 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { resetStore } from "@/lib/bank-store";
 import { resetNotifications } from "@/lib/notifications";
+import { ThemeProvider } from "@/lib/theme";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -135,13 +136,6 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
   useEffect(() => {
-    try {
-      document.documentElement.classList.toggle("light", window.localStorage.getItem("george-theme") === "light");
-    } catch {
-      document.documentElement.classList.remove("light");
-    }
-  }, []);
-  useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       resetStore();
@@ -155,11 +149,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <main className="screen-transition">
-        <Outlet />
-      </main>
-      <Toaster position="top-center" />
+      <ThemeProvider>
+        {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+        <main className="screen-transition">
+          <Outlet />
+        </main>
+        <Toaster position="top-center" />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
