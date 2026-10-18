@@ -484,8 +484,8 @@ export default function UcetDetail() {
     <AppShell>
       <div className="min-h-screen transaction-detail bg-detail-background text-foreground pb-32 font-sans transition-colors duration-300">
         
-        {/* Fuchsiová hlavička účtu s bielou šípkou späť */}
-        <div className="bg-[#be0055] px-4 pt-3 pb-16 text-white transition-colors">
+        {/* Modrá hlavička účtu ako na hlavnej stránke s bielou šípkou späť */}
+        <div className="bg-[#196ee6] dark:bg-[#0e0e12] px-4 pt-3 pb-16 text-white transition-colors">
           <div className="flex items-center py-2">
             <Link 
               to="/" 
