@@ -3,8 +3,11 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } =>
+    typeof s.next === "string" ? { next: s.next } : {},
   head: () => ({
     meta: [
       { title: "Prihlásenie · Internetbanking George" },
@@ -26,6 +29,12 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next: rawNext } = Route.useSearch();
+  const next = oauthReturnPath(rawNext);
+  const goNext = () => {
+    if (next !== "/") window.location.href = next;
+    else navigate({ to: "/", replace: true });
+  };
   const [mode, setMode] = useState<"in" | "up">("in");
   const [owner, setOwner] = useState("");
   const [email, setEmail] = useState("");
@@ -35,9 +44,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/", replace: true });
+      if (data.session) goNext();
     });
-  }, [navigate]);
+  }, [navigate, next]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -48,7 +57,7 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: new URL(next, window.location.origin).href,
             data: { owner: owner.trim() },
           },
         });
@@ -59,12 +68,12 @@ function AuthPage() {
           return;
         }
         toast.success("Účet je vytvorený.");
-        navigate({ to: "/", replace: true });
+        goNext();
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success("Prihlásenie úspešné.");
-        navigate({ to: "/", replace: true });
+        goNext();
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Prihlásenie sa nepodarilo.");
@@ -76,7 +85,7 @@ function AuthPage() {
   async function google() {
     setBusy(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: new URL(next, window.location.origin).href,
     });
     if (result.error) {
       setBusy(false);
@@ -84,7 +93,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/", replace: true });
+    goNext();
   }
 
   return (
