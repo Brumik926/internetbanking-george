@@ -218,6 +218,14 @@ function Nastavenia() {
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400" />
           </Link>
+
+          <Link to="/centrum-platieb" className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition">
+            <div className="flex items-center gap-3.5">
+              <ArrowDownLeft className="w-5 h-5 rotate-180 text-[#196ee6] dark:text-[#38bdf8]" />
+              <span className="text-[15px] font-semibold">Centrum platieb</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </Link>
         </div>
 
         {/* VZHĽAD */}

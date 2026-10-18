@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedCentrumPlatiebRouteImport } from './routes/_authenticated/centrum-platieb'
 import { Route as AuthenticatedKartyRouteImport } from './routes/_authenticated/karty'
 import { Route as AuthenticatedNastaveniaRouteImport } from './routes/_authenticated/nastavenia'
 import { Route as AuthenticatedNovaPlatbaRouteImport } from './routes/_authenticated/nova-platba'
@@ -51,6 +52,12 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCentrumPlatiebRoute =
+  AuthenticatedCentrumPlatiebRouteImport.update({
+    id: '/centrum-platieb',
+    path: '/centrum-platieb',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedKartyRoute = AuthenticatedKartyRouteImport.update({
   id: '/karty',
   path: '/karty',
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/mcp': typeof McpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/centrum-platieb': typeof AuthenticatedCentrumPlatiebRoute
   '/karty': typeof AuthenticatedKartyRoute
   '/nastavenia': typeof AuthenticatedNastaveniaRoute
   '/nova-platba': typeof AuthenticatedNovaPlatbaRoute
@@ -130,6 +138,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/mcp': typeof McpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/centrum-platieb': typeof AuthenticatedCentrumPlatiebRoute
   '/karty': typeof AuthenticatedKartyRoute
   '/nastavenia': typeof AuthenticatedNastaveniaRoute
   '/nova-platba': typeof AuthenticatedNovaPlatbaRoute
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/mcp': typeof McpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/centrum-platieb': typeof AuthenticatedCentrumPlatiebRoute
   '/_authenticated/karty': typeof AuthenticatedKartyRoute
   '/_authenticated/nastavenia': typeof AuthenticatedNastaveniaRoute
   '/_authenticated/nova-platba': typeof AuthenticatedNovaPlatbaRoute
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/mcp'
     | '/.well-known/oauth-protected-resource'
+    | '/centrum-platieb'
     | '/karty'
     | '/nastavenia'
     | '/nova-platba'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/mcp'
     | '/.well-known/oauth-protected-resource'
+    | '/centrum-platieb'
     | '/karty'
     | '/nastavenia'
     | '/nova-platba'
@@ -203,6 +215,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/mcp'
     | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/centrum-platieb'
     | '/_authenticated/karty'
     | '/_authenticated/nastavenia'
     | '/_authenticated/nova-platba'
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/centrum-platieb': {
+      id: '/_authenticated/centrum-platieb'
+      path: '/centrum-platieb'
+      fullPath: '/centrum-platieb'
+      preLoaderRoute: typeof AuthenticatedCentrumPlatiebRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/karty': {
@@ -343,6 +363,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCentrumPlatiebRoute: typeof AuthenticatedCentrumPlatiebRoute
   AuthenticatedKartyRoute: typeof AuthenticatedKartyRoute
   AuthenticatedNastaveniaRoute: typeof AuthenticatedNastaveniaRoute
   AuthenticatedNovaPlatbaRoute: typeof AuthenticatedNovaPlatbaRoute
@@ -357,6 +378,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCentrumPlatiebRoute: AuthenticatedCentrumPlatiebRoute,
   AuthenticatedKartyRoute: AuthenticatedKartyRoute,
   AuthenticatedNastaveniaRoute: AuthenticatedNastaveniaRoute,
   AuthenticatedNovaPlatbaRoute: AuthenticatedNovaPlatbaRoute,
