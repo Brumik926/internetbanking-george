@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CreditCard, Lock, Unlock } from "lucide-react";
+import { Copy, CreditCard, Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, BrandHeader } from "@/components/bank/AppShell";
 import { Button } from "@/components/ui/button";
@@ -25,13 +25,17 @@ type CardSettings = { blocked: boolean; payLimit: number; atmLimit: number };
 const DEFAULTS: CardSettings = { blocked: false, payLimit: 1500, atmLimit: 500 };
 
 const CARDS = [
-  { id: "mc-3302", label: "Virtuálna karta Mastercard", last4: "3302", expiry: "10/31" },
-  { id: "mc-5739", label: "Virtuálna karta Mastercard", last4: "5739", expiry: "10/31" },
+  { id: "mc-3302", label: "Virtuálna karta Mastercard", last4: "3302", number: "5356 1785 0213 3302", cvv: "945", expiry: "10/31" },
+  { id: "mc-5739", label: "Virtuálna karta Mastercard", last4: "5739", number: "5356 1785 2050 5739", cvv: "081", expiry: "10/31" },
 ];
 
 function CardsPage() {
   const s = useBank();
   const [userId, setUserId] = useState<string | null>(null);
+  const [shown, setShown] = useState<Record<string, boolean>>({});
+  const copy = async (v: string, what: string) => {
+    try { await navigator.clipboard.writeText(v.replace(/ /g, "")); toast.success(`${what} skopírované`); } catch { toast.error("Kopírovanie sa nepodarilo"); }
+  };
   const [all, setAll] = useState<Record<string, CardSettings>>({});
 
   useEffect(() => {
@@ -57,6 +61,7 @@ function CardsPage() {
       <div className="space-y-6 px-4">
         {CARDS.map((c) => {
           const st = { ...DEFAULTS, ...all[c.id] };
+          const open = !!shown[c.id];
           return (
             <div key={c.id} className="space-y-3">
               <div className={`relative rounded-2xl bg-gradient-to-br from-[#4a4a4a] to-[#1f1f1f] p-5 text-white shadow-lg transition ${st.blocked ? "opacity-50 grayscale" : ""}`}>
@@ -65,19 +70,28 @@ function CardsPage() {
                   <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#1f1f1f]">{st.blocked ? "Blokovaná" : "Virtuálna"}</span>
                 </div>
                 <p className="text-xs opacity-70">Číslo karty</p>
-                <div className="mb-4 text-lg tracking-widest">•••• •••• •••• {c.last4}</div>
+                <div className="mb-4 flex items-center gap-3 text-lg tracking-widest">
+                  {open ? c.number : `•••• •••• •••• ${c.last4}`}
+                  {open ? <button type="button" aria-label="Kopírovať číslo karty" className="grid size-9 place-items-center rounded-full hover:bg-white/15" onClick={() => copy(c.number, "Číslo karty")}><Copy className="size-4" /></button> : null}
+                </div>
                 <div className="flex items-end justify-between text-xs">
                   <div><p className="opacity-70">Dátum platnosti</p><p className="text-base font-semibold">{c.expiry}</p></div>
-                  <span className="opacity-80">{holder}</span>
+                  <div><p className="opacity-70">CVV</p><p className="flex items-center gap-2 text-base font-semibold">{open ? c.cvv : "•••"}
+                    {open ? <button type="button" aria-label="Kopírovať CVV" className="grid size-8 place-items-center rounded-full hover:bg-white/15" onClick={() => copy(c.cvv, "CVV")}><Copy className="size-4" /></button> : null}</p></div>
                   <span className="flex" aria-label="Mastercard">
                     <span className="size-8 rounded-full bg-[#eb001b]" />
                     <span className="-ml-3 size-8 rounded-full bg-[#f79e1b]/90" />
                   </span>
                 </div>
               </div>
+              <p className="px-1 text-xs text-muted-foreground">{holder}</p>
+              <div className="grid grid-cols-2 gap-3">
+              <Button variant="secondary" className="h-12 rounded-2xl" onClick={() => setShown({ ...shown, [c.id]: !open })}>
+                {open ? <EyeOff /> : <Eye />} {open ? "Skryť údaje" : "Zobraziť údaje"}
+              </Button>
               <Button
                 variant={st.blocked ? "default" : "secondary"}
-                className="h-12 w-full rounded-2xl"
+                className="h-12 rounded-2xl"
                 onClick={() => {
                   save(c.id, { ...st, blocked: !st.blocked });
                   toast.success(st.blocked ? "Karta odblokovaná" : "Karta dočasne zablokovaná");
@@ -85,6 +99,7 @@ function CardsPage() {
               >
                 {st.blocked ? <Unlock /> : <Lock />} {st.blocked ? "Odblokovať" : "Zablokovať"}
               </Button>
+              </div>
               <section className="space-y-6 rounded-3xl bg-surface p-5" data-no-swipe>
                 <LimitRow label="Denný limit platieb" value={st.payLimit} max={5000} onChange={(v) => save(c.id, { ...st, payLimit: v })} />
                 <LimitRow label="Denný limit výberov z bankomatu" value={st.atmLimit} max={2000} onChange={(v) => save(c.id, { ...st, atmLimit: v })} />
@@ -92,8 +107,7 @@ function CardsPage() {
             </div>
           );
         })}
-        <p className="px-1 text-xs text-muted-foreground">Celé číslo karty a CVV nájdete v aplikácii vašej banky.</p>
-      </div>
+              </div>
     </AppShell>
   );
 }
