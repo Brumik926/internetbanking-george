@@ -1,10 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowLeft, ArrowUpRight, ArrowDownLeft, Download, Tag, Pencil } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, ArrowDownLeft, Download, Tag, Pencil, Copy, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AppShell } from "@/components/bank/AppShell";
-import { formatDate, formatEur, useBank } from "@/lib/bank-store";
+import { formatDate, formatEur, removeTransaction, useBank } from "@/lib/bank-store";
 import { exportReceipt } from "@/lib/pdf-export";
 
 export const Route = createFileRoute("/_authenticated/transakcia/$id")({
@@ -35,6 +35,7 @@ function Detail() {
   const s = useBank();
   const t = s.transactions.find((x) => x.id === id);
   const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
 
   if (!t) {
     return (
@@ -58,8 +59,8 @@ function Detail() {
   return (
     <AppShell>
       <div className="transaction-detail min-h-screen bg-detail-background pb-6 font-sans text-foreground">
-      <header className="px-4 pb-6 pt-6">
-        <Button asChild variant="ghost" size="icon" className="text-detail-action" aria-label="Späť na platby">
+      <header className="bg-gradient-to-br from-[#5b2a9e] to-[#196ee6] px-4 pb-6 pt-6">
+        <Button asChild variant="ghost" size="icon" className="text-white hover:bg-white/15 hover:text-white" aria-label="Späť na platby">
           <Link to="/platby"><ArrowLeft /></Link>
         </Button>
       </header>
@@ -120,6 +121,29 @@ function Detail() {
           {t.vs ? <Row label="Variabilný symbol" value={t.vs} /> : null}
           <Row label="Priebežný zostatok" value={formatEur(runningBalance)} />
         </dl>
+
+        <Button
+          variant="secondary"
+          className="h-12 w-full rounded-2xl"
+          onClick={async () => {
+            const text = [t.counterparty, t.iban, `${income ? "+" : "-"}${formatEur(t.amount)}`, formatDate(t.date), t.vs ? `VS ${t.vs}` : ""].filter(Boolean).join("\n");
+            try { await navigator.clipboard.writeText(text); toast.success("Údaje platby skopírované"); }
+            catch { toast.error("Kopírovanie sa nepodarilo"); }
+          }}
+        >
+          <Copy /> Kopírovať údaje platby
+        </Button>
+        <Button
+          variant="destructive"
+          className="h-12 w-full rounded-2xl"
+          onClick={async () => {
+            if (!window.confirm("Naozaj odstrániť túto transakciu?")) return;
+            try { await removeTransaction(t.id); toast.success("Transakcia odstránená"); navigate({ to: "/platby" }); }
+            catch (e) { console.error(e); toast.error("Transakciu sa nepodarilo odstrániť"); }
+          }}
+        >
+          <Trash2 /> Odstrániť transakciu
+        </Button>
       </div>
       </div>
     </AppShell>

@@ -399,3 +399,10 @@ export function groupByMonth(txns: Txn[]) {
   }
   return [...map.entries()];
 }
+
+export async function removeTransaction(id: string) {
+  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  if (error) throw error;
+  state.transactions = state.transactions.filter((t) => t.id !== id);
+  emit();
+}
