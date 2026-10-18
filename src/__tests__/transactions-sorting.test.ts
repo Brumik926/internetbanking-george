@@ -16,8 +16,8 @@ describe("História transakcií a radenie", () => {
     expect(grouped[1][0]).toBe("September 2026");
     
     // V októbri musí byť Slovnaft (7.10.) pred Billou (2.10.)
-    expect(grouped[0][1][0].counterparty).toBe("Slovnaft");
-    expect(grouped[0][1][1].counterparty).toBe("Billa");
+    expect(grouped[0][1][0]!.counterparty).toBe("Slovnaft");
+    expect(grouped[0][1][1]!.counterparty).toBe("Billa");
   });
 
   it("správne naformátuje dátum v miestnom čase", () => {
@@ -44,6 +44,6 @@ describe("História transakcií a radenie", () => {
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
 
-    expect(all[0].counterparty).toBe("Dnešná platba");
+    expect(all[0]!.counterparty).toBe("Dnešná platba");
   });
 });

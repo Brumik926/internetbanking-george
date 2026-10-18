@@ -172,7 +172,7 @@ export async function loadAll() {
     transactions: (txns.data ?? [])
       .map((r) => ({
         id: r.id,
-        type: r.type === "in" ? "in" : "out",
+        type: (r.type === "in" ? "in" : "out") as "in" | "out",
         counterparty: r.counterparty,
         iban: r.iban ?? undefined,
         amount: num(r.amount),
