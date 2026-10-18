@@ -521,7 +521,7 @@ export default function UcetDetail() {
                 </p>
               </div>
 
-              <div className="w-12 h-12 rounded-full overflow-hidden border border-detail-action-surface shrink-0 bg-slate-100 dark:bg-gray-800">
+              <div className="w-12 h-12 rounded-full overflow-hidden border border-detail-action-surface shrink-0 bg-detail-action-surface">
                 <img
                   src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=120&auto=format&fit=crop&q=80"
                   alt="SPACE Účet"
@@ -585,7 +585,7 @@ export default function UcetDetail() {
               {/* Vyhľadávacie pole rozbalené cez Lupu */}
               {isSearching && (
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-detail-muted dark:text-gray-400" />
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-detail-muted" />
                   <input
                     type="text"
                     autoFocus
@@ -598,7 +598,7 @@ export default function UcetDetail() {
                     <button
                       type="button"
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-detail-muted hover:text-slate-600 dark:hover:text-gray-200"
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-detail-muted hover:text-foreground"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -629,7 +629,7 @@ export default function UcetDetail() {
               ) : (
                 groupedTransactions.map((group) => (
                   <div key={group.label} className="space-y-2 pt-1">
-                    <h2 className="text-[14px] font-semibold text-slate-800 dark:text-gray-200 px-1">
+                    <h2 className="text-[14px] font-semibold text-detail-muted px-1">
                       {group.label}
                     </h2>
                     <div className="space-y-2">
@@ -660,7 +660,7 @@ export default function UcetDetail() {
                                   </p>
                                 )}
                                 <div className="mt-1">
-                                  <span className="inline-block rounded-full border border-detail-action-surface px-2 py-0.5 text-[11px] text-slate-600 dark:text-gray-300">
+                                  <span className="inline-block rounded-full border border-detail-action-surface px-2 py-0.5 text-[11px] text-detail-muted">
                                     {t.category}
                                   </span>
                                 </div>
@@ -760,7 +760,7 @@ export default function UcetDetail() {
 
         {/* Plávajúci oválny panel (Floating Bottom Action Bar) */}
         <div className="fixed inset-x-0 bottom-5 z-50 mx-auto w-full max-w-[420px] px-4 pointer-events-none">
-          <div className="pointer-events-auto flex items-center justify-between gap-2.5 rounded-full bg-detail-surface/95 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)] border border-slate-200/80 dark:border-white/10 backdrop-blur-xl">
+          <div className="pointer-events-auto flex items-center justify-between gap-2.5 rounded-full bg-detail-surface/95 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)] border border-detail-action-surface backdrop-blur-xl">
             {/* Dve kruhové tlačidlá: Lupa/Vyhľadávanie a Štatistiky/Grafy */}
             <div className="flex items-center gap-2">
               <button
