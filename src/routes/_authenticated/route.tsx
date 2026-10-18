@@ -5,7 +5,9 @@ import { PersistentBottomNav } from "@/components/bank/AppShell";
 import { SwipeNav } from "@/components/bank/SwipeNav";
 import { BiometricLock } from "@/components/bank/BiometricLock";
 import { Button } from "@/components/ui/button";
-import { useBank } from "@/lib/bank-store";
+import { useBank, balance, monthTotals, formatEur, formatDate } from "@/lib/bank-store";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 import { reportLovableError } from "@/lib/lovable-error-reporting";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -109,7 +111,33 @@ function BankDataGate({ children }: { children: ReactNode }) {
     );
   }
 
-  return children;
+  return <><BankWebTools />{children}</>;
+}
+
+function BankWebTools() {
+  const bank = useBank();
+  useWebMCP({
+    name: "get_account_summary",
+    description: "Read the account balance and this month's income and expenses shown in the app.",
+    annotations: { readOnlyHint: true },
+    execute: () =>
+      runWebMCPTool("get_account_summary", () => {
+        const { income, expense } = monthTotals(bank);
+        return `Zostatok ${formatEur(balance(bank))}; tento mesiac príjmy ${formatEur(income)}, výdavky ${formatEur(expense)}.`;
+      }),
+  });
+  useWebMCP({
+    name: "list_recent_transactions",
+    description: "List the 20 most recent transactions on the account.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () =>
+      runWebMCPTool("list_recent_transactions", () =>
+        bank.transactions.length === 0
+          ? "Žiadne transakcie."
+          : bank.transactions.slice(0, 20).map((t) => `${t.id}: ${formatDate(t.date)} ${t.type === "in" ? "+" : "-"}${formatEur(t.amount)} ${t.counterparty}`).join("\n"),
+      ),
+  });
+  return null;
 }
 
 function AuthenticatedLayout() {
