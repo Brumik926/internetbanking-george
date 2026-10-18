@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/centrum-platieb")({
   component: CentrumPlatieb,
 });
 
-type Template = { id: string; title: string; name: string; iban: string; amount: string; vs?: string };
+type Template = { id: string; title: string; name: string; iban: string; amount: string; vs?: string | undefined };
 const KEY = "george-payment-templates";
 
 const field =
@@ -57,7 +57,7 @@ function CentrumPlatieb() {
     return [...map.values()].sort((a, b) => b.count - a.count).slice(0, 20);
   }, [s.transactions]);
 
-  const pay = (p: { name: string; iban: string; amount?: string; vs?: string }) =>
+  const pay = (p: { name: string; iban: string; amount?: string | undefined; vs?: string | undefined }) =>
     navigate({ to: "/nova-platba", search: { name: p.name, iban: p.iban, amount: p.amount, vs: p.vs } });
 
   const addTemplate = () => {
