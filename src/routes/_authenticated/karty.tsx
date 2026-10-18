@@ -124,7 +124,7 @@ function LimitRow({ label, value, max, onChange }: { label: string; value: numbe
         <span>{label}</span>
         <span className="font-bold">{formatEur(value)}</span>
       </div>
-      <Slider value={[value]} min={0} max={max} step={50} onValueChange={(v) => onChange(v[0])} />
+      <Slider value={[value]} min={0} max={max} step={50} onValueChange={(v) => onChange(v[0] ?? 0)} />
     </div>
   );
 }
