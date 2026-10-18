@@ -12,12 +12,12 @@ describe("História transakcií a radenie", () => {
     const grouped = groupByMonth(items);
     
     // Október musí byť prvý, September druhý
-    expect(grouped[0][0]).toBe("Október 2026");
-    expect(grouped[1][0]).toBe("September 2026");
+    expect(grouped[0]![0]).toBe("Október 2026");
+    expect(grouped[1]![0]).toBe("September 2026");
     
     // V októbri musí byť Slovnaft (7.10.) pred Billou (2.10.)
-    expect(grouped[0][1][0]!.counterparty).toBe("Slovnaft");
-    expect(grouped[0][1][1]!.counterparty).toBe("Billa");
+    expect(grouped[0]![1]![0]!.counterparty).toBe("Slovnaft");
+    expect(grouped[0]![1]![1]!.counterparty).toBe("Billa");
   });
 
   it("správne naformátuje dátum v miestnom čase", () => {
