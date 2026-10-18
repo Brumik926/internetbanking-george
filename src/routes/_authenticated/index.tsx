@@ -80,10 +80,10 @@ function getInitials(name?: string | null): string {
   const words = cleaned.split(/\s+/).filter((w) => w.length > 0);
   if (words.length === 0) return "??";
   if (words.length === 1) {
-    const single = words[0];
+    const single = words[0]!;
     return single.length >= 2 ? single.slice(0, 2).toUpperCase() : single.toUpperCase();
   }
-  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  return ((words[0]![0] ?? "") + (words[words.length - 1]![0] ?? "")).toUpperCase();
 }
 
 function getAvatarColor(name?: string | null): string {
@@ -99,7 +99,7 @@ function getAvatarColor(name?: string | null): string {
   const str = name || "unknown";
   let hash = 0;
   for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-  return colors[Math.abs(hash) % colors.length];
+  return colors[Math.abs(hash) % colors.length]!;
 }
 
 // Komponent loga obchodníka
@@ -285,7 +285,7 @@ function GeorgePrehladModern() {
   async function handleLogout() {
     await supabase.auth.signOut();
     resetStore();
-    navigate({ to: "/login" });
+    navigate({ to: "/auth" });
   }
 
   // --- OBSAH PROFILU ---
