@@ -31,11 +31,11 @@ export const Route = createFileRoute("/_authenticated/nova-platba")({
       { name: "description", content: "Zadajte prevod so skenovaním a overením v George." },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { name?: string; iban?: string; amount?: string; vs?: string } => ({
-    name: typeof search.name === "string" ? search.name : undefined,
-    iban: typeof search.iban === "string" ? search.iban : undefined,
-    amount: search.amount != null ? String(search.amount) : undefined,
-    vs: search.vs != null ? String(search.vs) : undefined,
+  validateSearch: (search: Record<string, unknown>): { name?: string | undefined; iban?: string | undefined; amount?: string | undefined; vs?: string | undefined } => ({
+    name: typeof search["name"] === "string" ? search["name"] : undefined,
+    iban: typeof search["iban"] === "string" ? search["iban"] : undefined,
+    amount: search["amount"] != null ? String(search["amount"]) : undefined,
+    vs: search["vs"] != null ? String(search["vs"]) : undefined,
   }),
   component: NovaPlatba,
 });
