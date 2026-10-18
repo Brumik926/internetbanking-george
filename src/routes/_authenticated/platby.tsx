@@ -50,15 +50,15 @@ function getInitials(name?: string | null): string {
   if (words.length === 0) return "??";
   
   if (words.length === 1) {
-    const single = words[0];
+    const single = words[0]!;
     return single.length >= 2 
       ? single.slice(0, 2).toUpperCase() 
       : single.toUpperCase();
   }
   
   // Prvé písmeno z prvého a posledného relevantného slova
-  const first = words[0][0] || "";
-  const last = words[words.length - 1][0] || "";
+  const first = words[0]![0] || "";
+  const last = words[words.length - 1]![0] || "";
   const result = (first + last).toUpperCase();
   
   return result.length > 0 ? result : "??";
@@ -85,7 +85,7 @@ function getAvatarColor(name?: string | null): string {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   const index = Math.abs(hash) % colors.length;
-  return colors[index];
+  return colors[index]!;
 }
 
 // Komponent loga obchodníka s rozšíreným zoznamom slovenských značiek

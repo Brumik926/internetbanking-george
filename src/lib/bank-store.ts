@@ -172,7 +172,7 @@ export async function loadAll() {
     transactions: (txns.data ?? [])
       .map((r) => ({
         id: r.id,
-        type: r.type === "in" ? "in" : "out",
+        type: (r.type === "in" ? "in" : "out") as "in" | "out",
         counterparty: r.counterparty,
         iban: r.iban ?? undefined,
         amount: num(r.amount),
@@ -398,4 +398,11 @@ export function groupByMonth(txns: Txn[]) {
     map.get(key)!.push(t);
   }
   return [...map.entries()];
+}
+
+export async function removeTransaction(id: string) {
+  const { error } = await supabase.from("transactions").delete().eq("id", id);
+  if (error) throw error;
+  state.transactions = state.transactions.filter((t) => t.id !== id);
+  emit();
 }
