@@ -4,7 +4,6 @@ import { CreditCard, Eye, EyeOff, Lock, Unlock } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, BrandHeader } from "@/components/bank/AppShell";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import { formatEur, useBank } from "@/lib/bank-store";
 import { supabase } from "@/integrations/supabase/client";
 import { isBiometricEnabled, verifyBiometric } from "@/lib/biometric";
@@ -124,7 +123,7 @@ function LimitRow({ label, value, max, onChange }: { label: string; value: numbe
         <span>{label}</span>
         <span className="font-bold">{formatEur(value)}</span>
       </div>
-      <Slider value={[value]} min={0} max={max} step={50} onValueChange={(v) => onChange(v[0] ?? 0)} />
+      <input type="range" aria-label={label} className="h-11 w-full cursor-pointer accent-primary" value={value} min={0} max={max} step={50} onChange={(e) => onChange(Number(e.target.value))} />
     </div>
   );
 }
