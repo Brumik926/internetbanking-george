@@ -31,6 +31,12 @@ export const Route = createFileRoute("/_authenticated/nova-platba")({
       { name: "description", content: "Zadajte prevod so skenovaním a overením v George." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>): { name?: string; iban?: string; amount?: string; vs?: string } => ({
+    name: typeof search.name === "string" ? search.name : undefined,
+    iban: typeof search.iban === "string" ? search.iban : undefined,
+    amount: search.amount != null ? String(search.amount) : undefined,
+    vs: search.vs != null ? String(search.vs) : undefined,
+  }),
   component: NovaPlatba,
 });
 
@@ -42,12 +48,13 @@ export default function NovaPlatba() {
   const navigate = useNavigate();
   const { user } = Route.useRouteContext();
 
-  const [name, setName] = useState("");
-  const [iban, setIban] = useState("");
-  const [amount, setAmount] = useState("");
+  const prefill = Route.useSearch();
+  const [name, setName] = useState(prefill.name ?? "");
+  const [iban, setIban] = useState(prefill.iban ?? "");
+  const [amount, setAmount] = useState(prefill.amount ?? "");
   const [category, setCategory] = useState("Prevod");
   const [note, setNote] = useState("");
-  const [vs, setVs] = useState("");
+  const [vs, setVs] = useState(prefill.vs ?? "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [bioSupported, setBioSupported] = useState(false);
