@@ -15,6 +15,13 @@
       "when": 1789905141817,
       "tag": "0001_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792395739820,
+      "tag": "0002_migration",
+      "breakpoints": true
     }
   ]
 }

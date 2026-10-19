@@ -4,6 +4,7 @@ import { Repeat, Star, Trash2, Plus, User } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/bank/AppShell";
 import { formatEur, useBank } from "@/lib/bank-store";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/centrum-platieb")({
   head: () => ({
@@ -33,17 +34,26 @@ function CentrumPlatieb() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      setTemplates(JSON.parse(localStorage.getItem(KEY) ?? "[]"));
-    } catch {
-      setTemplates([]);
-    }
+    supabase
+      .from("payment_templates")
+      .select("*")
+      .order("created_at")
+      .then(({ data }) =>
+        setTemplates(
+          (data ?? []).map((r) => ({ id: r.id, title: r.title, name: r.name, iban: r.iban, amount: Number(r.amount).toFixed(2), vs: r.vs ?? undefined })),
+        ),
+      );
   }, []);
 
-  const save = (list: Template[]) => {
+  const save = async (list: Template[]) => {
+    const removed = templates.filter((t) => !list.some((l) => l.id === t.id));
+    const added = list.filter((l) => !templates.some((t) => t.id === l.id));
     setTemplates(list);
-    localStorage.setItem(KEY, JSON.stringify(list));
+    for (const r of removed) await supabase.from("payment_templates").delete().eq("id", r.id);
+    for (const a of added)
+      await supabase.from("payment_templates").insert({ id: a.id, title: a.title, name: a.name, iban: a.iban, amount: Number(a.amount), vs: a.vs ?? null });
   };
+  void KEY;
 
   const recipients = useMemo(() => {
     const map = new Map<string, { name: string; iban: string; amount: number; count: number }>();
