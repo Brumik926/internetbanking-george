@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Search,
   CreditCard,
@@ -271,12 +272,15 @@ function GeorgePrehladModern() {
   const userName = s.owner || "Tomáš Lizák";
 
   const totalParts = splitAmount(total);
+  const savings = (s.goals ?? []).reduce((sum, g) => sum + (g.saved || 0), 0);
+  const savParts = splitAmount(savings);
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => { setHidden(localStorage.getItem("george-hide-balance") === "1"); }, []);
+  const toggleHidden = () => setHidden((h) => { localStorage.setItem("george-hide-balance", h ? "0" : "1"); return !h; });
   const expParts = splitAmount(expense);
   const incParts = splitAmount(income);
 
-  // Karta - posledné 4 číslice
-  const digits = (s.iban || "").replace(/\D/g, "");
-  const cardLastFour = digits.slice(-4) || "2269";
+  const cardLastFour = "3302";
 
   const recentTransactions = [...(s.transactions ?? [])]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -581,13 +585,21 @@ function GeorgePrehladModern() {
                         : "text-gray-900 dark:text-white"
                     }`}
                   >
-                    {totalParts.isNegative && <span className="mr-0.5">-</span>}
-                    <span>{totalParts.whole}</span>
+                    {!hidden && totalParts.isNegative && <span className="mr-0.5">-</span>}
+                    <span>{hidden ? "••••" : totalParts.whole}</span>
                     <span>,</span>
                     <sup className="text-[19px] font-bold top-[-0.45em] ml-0.5 leading-none select-none">
-                      {totalParts.cents}
+                      {hidden ? "••" : totalParts.cents}
                     </sup>
                     <span className="ml-1 text-[22px] font-semibold select-none">€</span>
+                    <button
+                      type="button"
+                      aria-label={hidden ? "Zobraziť zostatok" : "Skryť zostatok"}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleHidden(); }}
+                      className="ml-3 self-center rounded-full p-1.5 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10"
+                    >
+                      {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
                   </div>
 
                   {/* Účtovný zostatok */}
@@ -643,7 +655,7 @@ function GeorgePrehladModern() {
                 <div className="flex items-center justify-between mb-4 relative z-10">
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-bold tracking-tight text-white/95">
-                      SPACE karta
+                      Virtuálna karta
                     </span>
                     <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/80">
                       Debetná
@@ -686,16 +698,16 @@ function GeorgePrehladModern() {
 
                   <div className="text-right">
                     <p className="text-[9px] uppercase tracking-wider text-white/50">Platnosť</p>
-                    <p className="text-[11px] font-mono text-white/80 mt-0.5">10/28</p>
+                    <p className="text-[11px] font-mono text-white/80 mt-0.5">10/31</p>
                   </div>
 
-                  {/* Oficiálne logo VISA v pravom dolnom rohu */}
+                  {/* Logo Mastercard */}
                   <div className="pl-2">
-                    <div className="bg-white/95 rounded-md px-2 py-1 shadow-sm flex items-center justify-center">
-                      <svg className="h-3.5 w-auto" viewBox="0 0 36 12" fill="none">
-                        <path d="M14.5 1.2L12.2 11.8H9.4L11.7 1.2h2.8zm11.3 7c-.1-.7-.7-1.2-1.8-1.5-.7-.2-1.1-.4-1.1-.7 0-.2.3-.5.9-.5.7 0 1.5.2 2.1.5l.3-2.3c-.6-.2-1.4-.4-2.4-.4-2.6 0-4.4 1.4-4.4 3.3 0 1.5 1.3 2.3 2.3 2.8 1.1.5 1.4.8 1.4 1.3 0 .7-.8 1-1.6 1-.9 0-1.8-.2-2.5-.6l-.4 2.4c.7.3 1.8.5 2.8.5 2.8 0 4.6-1.4 4.6-3.4-.1-1.3-.8-2-1.6-2.5zm7.7-6.9h-2.2c-.7 0-1.2.2-1.5.9L25.6 11.8h3l.6-1.7h3.7l.3 1.7h2.7l-2.4-10.5zm-3.2 6.5l1.5-4.2.9 4.2h-2.4zM9 1.2L6.3 8.4 5.9 6.8c-.5-1.7-2-3.6-3.7-4.5L4.8 11.8h3l4.5-10.6H9z" fill="#00579f"/>
-                      </svg>
-                    </div>
+                    <svg className="h-7 w-auto" viewBox="0 0 48 30" aria-label="Mastercard">
+                      <circle cx="17" cy="15" r="13" fill="#eb001b" />
+                      <circle cx="31" cy="15" r="13" fill="#f79e1b" />
+                      <path d="M24 4.2a13 13 0 0 1 0 21.6a13 13 0 0 1 0-21.6z" fill="#ff5f00" />
+                    </svg>
                   </div>
                 </div>
               </Link>
@@ -712,9 +724,9 @@ function GeorgePrehladModern() {
               </div>
               <div className="mb-4">
                 <div className="text-[30px] font-bold flex items-baseline tracking-tight text-gray-900 dark:text-white">
-                  <span>0</span>
+                  <span>{hidden ? "••••" : savParts.whole}</span>
                   <span>,</span>
-                  <sup className="text-[17px] font-bold top-[-0.45em] ml-0.5 leading-none">00</sup>
+                  <sup className="text-[17px] font-bold top-[-0.45em] ml-0.5 leading-none">{hidden ? "••" : savParts.cents}</sup>
                   <span className="ml-1 text-[20px] font-semibold">€</span>
                 </div>
               </div>
@@ -793,58 +805,6 @@ function GeorgePrehladModern() {
         </>
       )}
 
-      {/* Spodná navigácia */}
-      <nav className="fixed bottom-0 left-0 w-full pb-safe pt-2 px-2 z-50 transition-colors duration-300 bg-white dark:bg-[#121216] border-t border-gray-100 dark:border-gray-800 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-none">
-        <div className="flex justify-around items-center pb-2">
-          <button
-            type="button"
-            onClick={() => setCurrentViewMode("dashboard")}
-            className={`flex flex-col items-center p-2 transition-colors ${currentViewMode === "dashboard" ? "text-[#196ee6] dark:text-[#4f95ff]" : "text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"}`}
-          >
-            <div className="relative">
-              <div className="font-serif italic text-2xl font-bold leading-none mb-1 select-none">
-                g
-              </div>
-              {currentViewMode === "dashboard" && <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#196ee6] dark:bg-[#4f95ff]" />}
-            </div>
-            <span className="text-[11px] font-bold mt-1">Prehľad</span>
-          </button>
-
-          <Link
-            to="/rozpocet"
-            className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <Activity size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">FIT</span>
-          </Link>
-
-          <Link
-            to="/sporenie"
-            className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <PieChart size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">Invest</span>
-          </Link>
-
-          <Link
-            to="/karty"
-            className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <Compass size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">Karty</span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => setCurrentViewMode("profile")}
-            className={`flex flex-col items-center p-2 transition-colors ${currentViewMode === "profile" ? "text-[#196ee6] dark:text-[#4f95ff]" : "text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"}`}
-            aria-current={currentViewMode === "profile" ? "page" : undefined}
-          >
-            <MessageSquare size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">Profil</span>
-          </button>
-        </div>
-      </nav>
     </div>
   );
 }
