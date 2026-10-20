@@ -32,6 +32,12 @@ function CentrumPlatieb() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [form, setForm] = useState({ title: "", name: "", iban: "", amount: "", vs: "" });
   const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const match = (x: { name: string; iban: string; title?: string }) => {
+    const n = q.trim().toLowerCase().replace(/\s/g, "");
+    if (!n) return true;
+    return [x.name, x.iban, x.title ?? ""].some((v) => v.toLowerCase().replace(/\s/g, "").includes(n));
+  };
 
   useEffect(() => {
     supabase
@@ -99,6 +105,12 @@ function CentrumPlatieb() {
       </header>
 
       <div className="-mt-12 space-y-4 px-4 pb-6">
+        <input
+          className={field + " bg-surface"}
+          placeholder="Hľadať podľa mena alebo IBAN"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+        />
         <section className="rounded-3xl bg-surface p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="flex items-center gap-2 text-[16px] font-bold">

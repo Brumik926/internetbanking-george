@@ -57,7 +57,7 @@ function Nastavenia() {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    setOwner(s.owner || "Adam Večera");
+    setOwner(s.owner || "Tomáš Lizák");
     setIban(s.iban || "SK31 1200 3545 0984 0539");
   }, [s.owner, s.iban]);
 
