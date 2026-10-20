@@ -143,7 +143,7 @@ function CentrumPlatieb() {
             <p className="py-3 text-[14px] text-muted-foreground">Zatiaľ žiadne šablóny. Uložte si napr. nájom alebo energie.</p>
           )}
           <ul className="divide-y divide-border">
-            {templates.map((t) => (
+            {templates.filter(match).map((t) => (
               <li key={t.id} className="flex items-center gap-3 py-3">
                 <button onClick={() => pay(t)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
@@ -169,7 +169,7 @@ function CentrumPlatieb() {
           </h2>
           {recipients.length === 0 && <p className="py-3 text-[14px] text-muted-foreground">Zatiaľ ste neposlali platbu na IBAN.</p>}
           <ul className="divide-y divide-border">
-            {recipients.map((r) => (
+            {recipients.filter(match).map((r) => (
               <li key={r.iban}>
                 <button onClick={() => pay({ name: r.name, iban: r.iban, amount: r.amount.toFixed(2) })} className="flex w-full items-center gap-3 py-3 text-left">
                   <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-surface-2 text-[14px] font-bold">

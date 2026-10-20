@@ -655,7 +655,7 @@ function GeorgePrehladModern() {
                 <div className="flex items-center justify-between mb-4 relative z-10">
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-bold tracking-tight text-white/95">
-                      SPACE karta
+                      Virtuálna karta
                     </span>
                     <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/80">
                       Debetná
