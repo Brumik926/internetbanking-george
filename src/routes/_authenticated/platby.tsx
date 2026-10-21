@@ -8,12 +8,20 @@ import {
   FileEdit, 
   CreditCard, 
   QrCode, 
-  SlidersHorizontal, 
   Copy, 
-  X 
+  X,
+  RefreshCw,
+  Landmark,
+  FileText,
+  Zap,
+  ClipboardCheck,
+  Smartphone,
+  PiggyBank,
+  Palette,
 } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/bank/AppShell";
+import { SlspLogo } from "@/components/bank/SlspLogo";
 import { balance, formatDate, MONTHS, useBank, type Txn } from "@/lib/bank-store";
 
 export const Route = createFileRoute("/_authenticated/platby")({
@@ -100,11 +108,7 @@ function MerchantLogo({ counterparty, category }: { counterparty: string; catego
     name.includes("poplatok za vedenie") || 
     category === "Poplatky"
   ) {
-    return (
-      <div className="w-10 h-10 rounded-full bg-[#196ee6] dark:bg-[#2a5ee8] flex items-center justify-center text-white shrink-0 shadow-sm">
-        <span className="font-serif italic font-bold text-[18px] leading-none select-none">š</span>
-      </div>
-    );
+    return <SlspLogo />;
   }
 
   // 2. Kaufland
@@ -485,7 +489,7 @@ export default function UcetDetail() {
       <div className="min-h-screen transaction-detail bg-detail-background text-foreground pb-32 font-sans transition-colors duration-300">
         
         {/* Modrá hlavička účtu ako na hlavnej stránke s bielou šípkou späť */}
-        <div className="bg-[#196ee6] dark:bg-[#0e0e12] px-4 pt-3 pb-16 text-white transition-colors">
+        <div className="bg-gradient-to-br from-[#2b2a9e] via-[#2f3ab0] to-[#2a2a8f] dark:from-[#16164f] dark:to-[#0e0e12] px-4 pt-6 pb-24 text-white transition-colors">
           <div className="flex items-center py-2">
             <Link 
               to="/" 
@@ -497,34 +501,34 @@ export default function UcetDetail() {
           </div>
         </div>
 
-        <div className="px-4 -mt-10 space-y-3">
+        <div className="px-4 -mt-14 space-y-3">
           {/* Karta účtu so zostatkom */}
-          <div className="rounded-3xl bg-detail-surface p-5  transition-colors">
+          <div className="rounded-3xl bg-detail-surface p-5 py-6 transition-colors">
             <div className="flex items-start justify-between">
               <div>
-                <h1 className="text-[17px] font-semibold text-foreground">SPACE účet</h1>
+                <h1 className="text-[17px] font-medium text-foreground">Účet</h1>
                 
-                <div className={`mt-1 flex items-baseline tracking-tight ${balanceParts.isNegative ? "text-[#e11d48] dark:text-[#ff5a70]" : "text-foreground"}`}>
-                  <span className="text-[32px] font-bold leading-none">
+                <div className={`mt-1 flex items-baseline tracking-tight ${balanceParts.isNegative ? "text-[#c8302f] dark:text-[#ff5a70]" : "text-foreground"}`}>
+                  <span className="text-[30px] font-bold leading-none">
                     {balanceParts.isNegative ? "-" : ""}{balanceParts.whole},
                   </span>
-                  <sup className="text-[18px] font-bold leading-none top-[-0.45em] ml-0.5 select-none">
+                  <sup className="text-[15px] font-bold leading-none top-[-0.6em] ml-0.5 select-none">
                     {balanceParts.cents}
                   </sup>
-                  <span className="text-[22px] font-semibold leading-none ml-1 select-none">
+                  <span className="text-[28px] font-bold leading-none ml-1 select-none">
                     €
                   </span>
                 </div>
 
-                <p className="mt-1.5 text-[13px] text-detail-muted">
+                <p className="mt-1.5 text-[14px] text-detail-muted">
                   {formattedOwnResources}
                 </p>
               </div>
 
-              <div className="w-12 h-12 rounded-full overflow-hidden border border-detail-action-surface shrink-0 bg-detail-action-surface">
+              <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-detail-action-surface">
                 <img
-                  src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=120&auto=format&fit=crop&q=80"
-                  alt="SPACE Účet"
+                  src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=160&auto=format&fit=crop&q=80"
+                  alt="Účet"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -607,16 +611,16 @@ export default function UcetDetail() {
               )}
 
               {/* Platobné príkazy a rezervácie */}
-              <div className="flex items-center gap-3.5 rounded-3xl bg-detail-surface p-4  transition-colors">
-                <div className="text-[#f43f5e] shrink-0">
-                  <FileEdit className="w-6 h-6 stroke-[2]" />
+              <div className="flex items-center gap-4 rounded-3xl bg-detail-surface px-5 py-5 transition-colors">
+                <div className="text-[#196ee6] dark:text-[#4f95ff] shrink-0">
+                  <FileEdit className="w-6 h-6 stroke-[1.8]" />
                 </div>
                 <div>
-                  <h3 className="text-[15px] font-semibold text-foreground">
+                  <h3 className="text-[16px] font-medium text-foreground">
                     Platobné príkazy a rezervácie
                   </h3>
-                  <p className="text-[12px] text-detail-muted mt-0.5">
-                    0 nezrealizovaných platieb & 0 rezervácií
+                  <p className="text-[13px] text-detail-muted mt-0.5">
+                    0 nevykonaných platieb & 0 rezervácií
                   </p>
                 </div>
               </div>
@@ -654,13 +658,15 @@ export default function UcetDetail() {
                                 <p className="text-[12px] text-detail-muted">
                                   {formatDate(t.date)}
                                 </p>
-                                {t.vs && (
+                                {t.vs ? (
                                   <p className="text-[12px] text-detail-muted">
-                                    KS / VS: {t.vs}
+                                    VS: {t.vs}
                                   </p>
-                                )}
+                                ) : t.category === "Poplatky" ? (
+                                  <p className="text-[12px] text-detail-muted">KS: 0898</p>
+                                ) : null}
                                 <div className="mt-1">
-                                  <span className="inline-block rounded-full border border-detail-action-surface px-2 py-0.5 text-[11px] text-detail-muted">
+                                  <span className="inline-block rounded-md border border-detail-muted/60 px-1.5 py-0 text-[11px] font-medium text-detail-muted">
                                     {t.category}
                                   </span>
                                 </div>
@@ -697,22 +703,53 @@ export default function UcetDetail() {
 
           {/* Obsah záložky Funkcie */}
           {activeTab === "funkcie" && (
-            <div className="space-y-2.5">
-              {[
-                { title: "Trvalé príkazy", desc: "Správa opakovaných platieb", icon: QrCode },
-                { title: "Výber z bankomatu mobilom", desc: "Kód pre bezkartový výber", icon: SlidersHorizontal },
-                { title: "Výpisy z účtu", desc: "Mesačné a ročné PDF výpisy", icon: FileEdit },
-              ].map((f) => (
-                <div key={f.title} className="flex items-center justify-between rounded-3xl bg-detail-surface p-4 ">
-                  <div className="flex items-center gap-3">
-                    <f.icon className="w-5 h-5 text-[#196ee6] dark:text-[#4f95ff]" />
+            <div className="space-y-5">
+              <div className="overflow-hidden rounded-3xl bg-detail-surface divide-y divide-detail-action-surface">
+                {[
+                  { title: "Trvalé príkazy", icon: RefreshCw, to: "/centrum-platieb" },
+                  { title: "Výber z bankomatu mobilom", icon: Landmark },
+                  { title: "Výpisy z účtu", icon: FileText, to: "/upozornenia" },
+                  { title: "Limit pre okamžité platby (SEPA)", desc: "Bez limitu", icon: Zap },
+                  { title: "Súhlasy s inkasom", icon: ClipboardCheck },
+                  { title: "Vytvoriť payme link / QR kód", icon: QrCode, to: "/prijat" },
+                  { title: "Dobiť kredit", icon: Smartphone },
+                ].map((f) => (
+                  <button
+                    key={f.title}
+                    type="button"
+                    onClick={() => (f.to ? navigate({ to: f.to }) : toast.info(`${f.title} – pripravujeme`))}
+                    className="flex w-full items-center gap-4 px-5 py-5 text-left active:opacity-80"
+                  >
+                    <f.icon className="w-6 h-6 shrink-0 text-[#196ee6] dark:text-[#4f95ff]" strokeWidth={1.8} />
                     <div>
-                      <p className="text-[15px] font-medium text-foreground">{f.title}</p>
-                      <p className="text-[12px] text-detail-muted">{f.desc}</p>
+                      <p className="text-[16px] text-foreground">{f.title}</p>
+                      {f.desc && <p className="text-[13px] text-detail-muted">{f.desc}</p>}
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <h3 className="px-1 pb-2 text-[15px] font-medium text-foreground">Automatické sporenie</h3>
+                <button type="button" onClick={() => navigate({ to: "/sporenie" })} className="flex w-full items-center gap-4 rounded-3xl bg-detail-surface px-5 py-5 text-left">
+                  <PiggyBank className="w-6 h-6 text-[#196ee6] dark:text-[#4f95ff]" strokeWidth={1.8} />
+                  <span className="flex-1 text-[16px] text-foreground">Drobné bokom</span>
+                  <span className="rounded-full bg-[#5b6493] px-3 py-1 text-[12px] font-semibold text-white">Nové</span>
+                </button>
+              </div>
+
+              <div>
+                <h3 className="px-1 pb-2 text-[15px] font-medium text-foreground">Zrušenia</h3>
+                <button type="button" onClick={() => toast.info("Zrušenie účtu je možné len na pobočke")} className="flex w-full items-center gap-4 rounded-3xl bg-detail-surface px-5 py-5 text-left">
+                  <X className="w-6 h-6 text-[#196ee6] dark:text-[#4f95ff]" strokeWidth={1.8} />
+                  <span className="text-[16px] text-foreground">Zrušiť účet</span>
+                </button>
+              </div>
+
+              <button type="button" onClick={() => navigate({ to: "/nastavenia" })} className="flex w-full items-center gap-4 rounded-3xl bg-detail-surface px-5 py-5 text-left">
+                <Palette className="w-6 h-6 text-[#196ee6] dark:text-[#4f95ff]" strokeWidth={1.8} />
+                <span className="text-[16px] text-foreground">Prispôsobiť</span>
+              </button>
             </div>
           )}
 
