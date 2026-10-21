@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Home, Banknote, Plus, PieChart, Menu, ArrowLeft } from "lucide-react";
+import { Rss, Activity, LayoutGrid, MessageSquare, ArrowLeft } from "lucide-react";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
@@ -14,83 +14,44 @@ export function AppShell({ children }: { children: ReactNode }) {
 export function PersistentBottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
-  // Skryť na obrazovke zadávania platby a v detaile transakcie
-  if (path === "/nova-platba" || path.startsWith("/transakcia")) {
+  // Skryť na zadávaní platby, v detaile transakcie a v detaile účtu (má vlastnú lištu)
+  if (path === "/nova-platba" || path.startsWith("/transakcia") || path === "/platby") {
     return null;
   }
 
-  const isPrehlad = path === "/";
-  const isPlatby = path === "/platby";
-  const isRozpocet = path === "/rozpocet";
-  const isViac = path === "/nastavenia" || path === "/karty" || path === "/sporenie" || path === "/upozornenia";
+  const tabs = [
+    { to: "/", label: "Prehľad", active: path === "/", icon: null },
+    { to: "/rozpocet", label: "FIT", active: path === "/rozpocet", icon: Rss },
+    { to: "/sporenie", label: "Invest", active: path === "/sporenie", icon: Activity },
+    { to: "/centrum-platieb", label: "Objavujte", active: path === "/centrum-platieb" || path === "/karty" || path === "/svetovy-cas", icon: LayoutGrid },
+    { to: "/nastavenia", label: "Kontakty", active: path === "/nastavenia" || path === "/upozornenia", icon: MessageSquare, dot: true },
+  ] as const;
 
   return createPortal(
-    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[430px] border-t border-slate-200/70 dark:border-zinc-800/80 bg-white/95 dark:bg-[#12161f]/95 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl shadow-lg transition-colors">
-      <div className="grid grid-cols-5 items-end px-2">
-        
-        {/* 1. Prehľad */}
-        <Link
-          to="/"
-          className={`flex flex-col items-center py-1 text-[11px] transition ${
-            isPrehlad
-              ? "font-bold text-[#196ee6] dark:text-[#38bdf8]"
-              : "text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200"
-          }`}
-        >
-          <Home className={`w-5 h-5 mb-1 ${isPrehlad ? "stroke-[2.5]" : "stroke-[1.8]"}`} />
-          <span>Prehľad</span>
-        </Link>
-
-        {/* 2. Platby */}
-        <Link
-          to="/platby"
-          className={`flex flex-col items-center py-1 text-[11px] transition ${
-            isPlatby
-              ? "font-bold text-[#196ee6] dark:text-[#38bdf8]"
-              : "text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200"
-          }`}
-        >
-          <Banknote className={`w-5 h-5 mb-1 ${isPlatby ? "stroke-[2.5]" : "stroke-[1.8]"}`} />
-          <span>Platby</span>
-        </Link>
-
-        {/* 3. Stredové vyvýšené tlačidlo '+' */}
-        <div className="flex justify-center -mt-5">
-          <Link
-            to="/nova-platba"
-            aria-label="Nová platba"
-            className="w-13 h-13 rounded-full bg-[#196ee6] hover:bg-[#155ec4] text-white flex items-center justify-center shadow-lg shadow-[#196ee6]/35 active:scale-95 transition-all"
-          >
-            <Plus className="w-7 h-7 stroke-[2.6]" />
-          </Link>
-        </div>
-
-        {/* 4. Rozpočet */}
-        <Link
-          to="/rozpocet"
-          className={`flex flex-col items-center py-1 text-[11px] transition ${
-            isRozpocet
-              ? "font-bold text-[#196ee6] dark:text-[#38bdf8]"
-              : "text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200"
-          }`}
-        >
-          <PieChart className={`w-5 h-5 mb-1 ${isRozpocet ? "stroke-[2.5]" : "stroke-[1.8]"}`} />
-          <span>Rozpočet</span>
-        </Link>
-
-        {/* 5. Viac (Nastavenia) */}
-        <Link
-          to="/nastavenia"
-          className={`flex flex-col items-center py-1 text-[11px] transition ${
-            isViac
-              ? "font-bold text-[#196ee6] dark:text-[#38bdf8]"
-              : "text-slate-400 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200"
-          }`}
-        >
-          <Menu className={`w-5 h-5 mb-1 ${isViac ? "stroke-[2.5]" : "stroke-[1.8]"}`} />
-          <span>Viac</span>
-        </Link>
-
+    <nav className="fixed inset-x-0 bottom-0 z-50 mx-auto w-full max-w-[430px] border-t border-slate-200/70 dark:border-zinc-800/80 bg-white/95 dark:bg-[#12161f]/95 pb-[max(0.6rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-xl transition-colors">
+      <div className="grid grid-cols-5 items-end px-1">
+        {tabs.map((t) => {
+          const Icon = t.icon;
+          return (
+            <Link
+              key={t.to}
+              to={t.to}
+              className={`flex flex-col items-center text-[12px] transition ${
+                t.active ? "font-semibold text-[#196ee6] dark:text-[#4f95ff]" : "text-slate-500 dark:text-zinc-400"
+              }`}
+            >
+              <span className={`relative mb-1 flex h-8 w-16 items-center justify-center rounded-full ${t.active ? "bg-[#eef3ff] dark:bg-[#242b3b]" : ""}`}>
+                {Icon ? (
+                  <Icon className="w-6 h-6" strokeWidth={1.8} />
+                ) : (
+                  <span className="font-bold text-[22px] leading-none select-none">g</span>
+                )}
+                {"dot" in t && t.dot && <span className="absolute top-0 right-3 h-2 w-2 rounded-full bg-[#e63946]" />}
+              </span>
+              <span>{t.label}</span>
+            </Link>
+          );
+        })}
       </div>
     </nav>,
     document.body,
