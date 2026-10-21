@@ -36,6 +36,7 @@ import {
   ChevronRight,
   Wifi
 } from "lucide-react";
+import { SlspLogo } from "@/components/bank/SlspLogo";
 import { supabase } from "@/integrations/supabase/client";
 import {
   balance,
@@ -114,11 +115,7 @@ function MerchantLogo({ counterparty, category }: { counterparty: string; catego
     name.includes("poplatok") || 
     category === "Poplatky"
   ) {
-    return (
-      <div className="w-10 h-10 rounded-full bg-[#196ee6] dark:bg-[#2a5ee8] flex items-center justify-center text-white shrink-0 shadow-sm">
-        <span className="font-serif italic font-bold text-[18px] leading-none select-none">š</span>
-      </div>
-    );
+    return <SlspLogo />;
   }
 
   if (name.includes("kaufland")) {
