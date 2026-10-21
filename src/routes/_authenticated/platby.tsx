@@ -717,7 +717,7 @@ export default function UcetDetail() {
                   <button
                     key={f.title}
                     type="button"
-                    onClick={() => (f.to ? navigate({ to: f.to }) : toast.info(`${f.title} – pripravujeme`))}
+                    onClick={() => (f.to ? navigate({ to: f.to as "/" }) : toast.info(`${f.title} – pripravujeme`))}
                     className="flex w-full items-center gap-4 px-5 py-5 text-left active:opacity-80"
                   >
                     <f.icon className="w-6 h-6 shrink-0 text-[#196ee6] dark:text-[#4f95ff]" strokeWidth={1.8} />
