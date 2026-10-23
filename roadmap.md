@@ -17,3 +17,4 @@
 - [x] Ochrana prihlásených obrazoviek pred prázdnym zobrazením pri chybe načítania
 - [x] Upraviť detail odoslanej platby podľa priloženej fotografie
 - [x] Vytvoriť a overiť nové APK s logom S s bodkou
+- [ ] Upraviť FIT / Rozpočet: mesačné výdavky, príjmy, limity a overenie
