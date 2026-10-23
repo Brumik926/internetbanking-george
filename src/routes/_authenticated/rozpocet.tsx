@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Pencil, Plus, Rss, ShoppingBasket, House, Bus, HeartPulse, CircleDollarSign, Wallet, X } from "lucide-react";
 import { AppShell } from "@/components/bank/AppShell";
 import { Button } from "@/components/ui/button";
@@ -104,8 +105,8 @@ function Rozpocet() {
             })}</div>}
           </section>
         </>}
-        {editing && <div className="fixed inset-0 z-[70] flex items-end justify-center bg-fit-overlay px-3 py-6 sm:items-center" onClick={() => { if (!saving) setEditing(false); }}>
-          <section role="dialog" aria-modal="true" aria-labelledby="budget-edit-title" className="w-full max-w-[398px] rounded-lg bg-detail-surface p-5" onClick={(event) => event.stopPropagation()}>
+        {editing && createPortal(<div className="fixed inset-0 z-[70] flex items-end justify-center bg-fit-overlay px-3 py-6 sm:items-center" onClick={() => { if (!saving) setEditing(false); }} onKeyDown={(event) => { if (event.key === "Escape" && !saving) setEditing(false); }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="budget-edit-title" className="max-h-[85dvh] w-full max-w-[398px] overflow-y-auto rounded-lg bg-detail-surface p-5 text-foreground" onClick={(event) => event.stopPropagation()}>
             <div className="mb-5 flex items-center justify-between"><h2 id="budget-edit-title" className="text-lg font-semibold tracking-normal">Nastaviť mesačný limit</h2><Button variant="ghost" size="icon" aria-label="Zavrieť" disabled={saving} onClick={() => setEditing(false)}><X /></Button></div>
             <form onSubmit={save} className="space-y-4">
               <label className="block text-sm">Kategória<select autoFocus className={`${field} mt-2`} value={category} onChange={(event) => setCategory(event.target.value)}>{[...new Set([...CATEGORIES, ...state.budgets.map((row) => row.category)])].map((name) => <option key={name}>{name}</option>)}</select></label>
@@ -114,7 +115,7 @@ function Rozpocet() {
               <Button type="submit" disabled={saving} className="h-12 w-full">{saving ? "Ukladám…" : "Uložiť limit"}</Button>
             </form>
           </section>
-        </div>}
+        </div>, document.body)}
       </div>
     </AppShell>
   );
