@@ -13,5 +13,5 @@ grant select, insert, update, delete on public.payment_templates to authenticate
 grant all on public.payment_templates to service_role;
 create policy "own templates select" on public.payment_templates for select to authenticated using (auth.uid() = user_id);
 create policy "own templates insert" on public.payment_templates for insert to authenticated with check (auth.uid() = user_id);
-create policy "own templates update" on public.payment_templates for update to authenticated using (auth.uid() = user_id);
+create policy "own templates update" on public.payment_templates for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
 create policy "own templates delete" on public.payment_templates for delete to authenticated using (auth.uid() = user_id);
