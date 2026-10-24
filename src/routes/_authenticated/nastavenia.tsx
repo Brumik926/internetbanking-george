@@ -21,6 +21,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { resetStore, saveProfile, useBank } from "@/lib/bank-store";
 import { resetNotifications, unreadCount, useNotifications } from "@/lib/notifications";
+import { useTheme } from "@/lib/theme";
 import {
   clearUnlocked,
   disableBiometric,
@@ -56,26 +57,12 @@ function Nastavenia() {
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
-    setOwner(s.owner || "Adam Večera");
+    setOwner(s.owner || "Tomáš Lizák");
     setIban(s.iban || "SK31 1200 3545 0984 0539");
   }, [s.owner, s.iban]);
 
-  // Téma (Denný / Nočný režim)
-  const [light, setLight] = useState(false);
-
-  useEffect(() => {
-    const saved = window.localStorage.getItem("george-theme");
-    const isLight = saved === "light";
-    setLight(isLight);
-    document.documentElement.classList.toggle("light", isLight);
-  }, []);
-
-  function toggleTheme() {
-    const nextLight = !light;
-    setLight(nextLight);
-    document.documentElement.classList.toggle("light", nextLight);
-    window.localStorage.setItem("george-theme", nextLight ? "light" : "dark");
-  }
+  // Téma (Denný / Nočný režim) — spravuje ThemeProvider v koreni
+  const { isLight: light, toggleTheme } = useTheme();
 
   // Biometria
   const [userId, setUserId] = useState<string | null>(null);
@@ -215,6 +202,14 @@ function Nastavenia() {
             <div className="flex items-center gap-3.5">
               <ArrowDownLeft className="w-5 h-5 text-[#196ee6] dark:text-[#38bdf8]" />
               <span className="text-[15px] font-semibold">Prijať peniaze</span>
+            </div>
+            <ChevronRight className="w-5 h-5 text-slate-400" />
+          </Link>
+
+          <Link to="/centrum-platieb" className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition">
+            <div className="flex items-center gap-3.5">
+              <ArrowDownLeft className="w-5 h-5 rotate-180 text-[#196ee6] dark:text-[#38bdf8]" />
+              <span className="text-[15px] font-semibold">Centrum platieb</span>
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400" />
           </Link>

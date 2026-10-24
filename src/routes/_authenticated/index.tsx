@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff, BarChart3 } from "lucide-react";
 import {
   Search,
   CreditCard,
@@ -35,6 +36,7 @@ import {
   ChevronRight,
   Wifi
 } from "lucide-react";
+import { SlspLogo } from "@/components/bank/SlspLogo";
 import { supabase } from "@/integrations/supabase/client";
 import {
   balance,
@@ -113,11 +115,7 @@ function MerchantLogo({ counterparty, category }: { counterparty: string; catego
     name.includes("poplatok") || 
     category === "Poplatky"
   ) {
-    return (
-      <div className="w-10 h-10 rounded-full bg-[#196ee6] dark:bg-[#2a5ee8] flex items-center justify-center text-white shrink-0 shadow-sm">
-        <span className="font-serif italic font-bold text-[18px] leading-none select-none">š</span>
-      </div>
-    );
+    return <SlspLogo />;
   }
 
   if (name.includes("kaufland")) {
@@ -271,12 +269,15 @@ function GeorgePrehladModern() {
   const userName = s.owner || "Tomáš Lizák";
 
   const totalParts = splitAmount(total);
+  const savings = (s.goals ?? []).reduce((sum, g) => sum + (g.saved || 0), 0);
+  const savParts = splitAmount(savings);
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => { setHidden(localStorage.getItem("george-hide-balance") === "1"); }, []);
+  const toggleHidden = () => setHidden((h) => { localStorage.setItem("george-hide-balance", h ? "0" : "1"); return !h; });
   const expParts = splitAmount(expense);
   const incParts = splitAmount(income);
 
-  // Karta - posledné 4 číslice
-  const digits = (s.iban || "").replace(/\D/g, "");
-  const cardLastFour = digits.slice(-4) || "2269";
+  const cardLastFour = "3302";
 
   const recentTransactions = [...(s.transactions ?? [])]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -447,12 +448,8 @@ function GeorgePrehladModern() {
         <>
           {/* Modrá hlavička */}
           <div className="pt-6 pb-24 px-4 transition-colors duration-300 bg-[#196ee6] dark:bg-[#0e0e12] text-white rounded-b-3xl dark:rounded-none">
-            <header className="flex justify-between items-center">
-              <div className="flex items-center">
-                <span className="font-bold text-[18px] tracking-tight text-white">
-                  Slovenská sporiteľňa
-                </span>
-              </div>
+            <header className="flex justify-end items-center">
+
 
               <div className="flex items-center gap-3">
                 <Link
@@ -494,124 +491,94 @@ function GeorgePrehladModern() {
           <main className="px-4 -mt-14 relative z-10">
             {/* Sekcia: Výdavky a Príjmy za aktuálny mesiac */}
             <div className="grid grid-cols-2 gap-3 mb-5">
-              {/* Výdavky */}
               <Link
                 to="/rozpocet"
-                className="rounded-3xl p-4 flex flex-col justify-between h-[115px] transition-colors duration-300 block active:scale-[0.98] bg-white dark:bg-[#1c1c24] shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5"
+                className="rounded-3xl p-4 block active:scale-[0.98] bg-white dark:bg-[#1c1c24] shadow-sm"
               >
                 <div className="flex justify-between items-start">
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    Výdavky
+                  <span className="text-[15px] text-[#1b2a4a] dark:text-gray-200 leading-tight">
+                    Výdavky za {MONTHS[new Date().getMonth()]?.toLowerCase()}
                   </span>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 dark:bg-red-950/60 text-[#e63946] dark:text-[#ff5252]">
-                    <ArrowUpRight size={15} strokeWidth={2.5} />
+                  <div className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]">
+                    <BarChart3 size={16} strokeWidth={2.5} />
                   </div>
                 </div>
-                <div>
-                  <div className="text-xl font-bold flex items-baseline tracking-tight text-[#e63946] dark:text-[#ff5252]">
-                    <span>{expParts.whole}</span>
-                    <span>,</span>
-                    <sup className="text-xs font-bold top-[-0.45em] ml-0.5">{expParts.cents}</sup>
-                    <span className="ml-1 text-sm font-normal">€</span>
-                  </div>
-                  <div className="text-[11px] mt-1 text-gray-500">Tento mesiac</div>
+                <div className="text-[20px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1">
+                  <span>{expParts.whole}</span>
+                  <span>,</span>
+                  <sup className="text-[11px] font-bold top-[-0.6em] ml-0.5">{expParts.cents}</sup>
+                  <span className="ml-1">€</span>
                 </div>
+                <div className="text-[13px] text-gray-500">Neurčený rozpočet</div>
               </Link>
 
-              {/* Príjmy */}
-              <div className="rounded-3xl p-4 flex flex-col justify-between h-[115px] transition-colors duration-300 bg-white dark:bg-[#1c1c24] shadow-sm dark:shadow-none border border-gray-100 dark:border-white/5">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">
-                    Príjmy
-                  </span>
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
-                    <ArrowDownLeft size={15} strokeWidth={2.5} />
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xl font-bold flex items-baseline tracking-tight text-emerald-600 dark:text-emerald-400">
-                    <span>{incParts.whole}</span>
-                    <span>,</span>
-                    <sup className="text-xs font-bold top-[-0.45em] ml-0.5">{incParts.cents}</sup>
-                    <span className="ml-1 text-sm font-normal">€</span>
-                  </div>
-                  <div className="text-[11px] mt-1 text-gray-500">Tento mesiac</div>
+              <div className="rounded-3xl p-4 bg-white dark:bg-[#1c1c24] shadow-sm">
+                <span className="text-[15px] text-[#1b2a4a] dark:text-gray-200 leading-tight block min-h-9">
+                  Príjmy za {MONTHS[new Date().getMonth()]?.toLowerCase()}
+                </span>
+                <div className="text-[20px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1">
+                  <span>{incParts.whole}</span>
+                  <span>,</span>
+                  <sup className="text-[11px] font-bold top-[-0.6em] ml-0.5">{incParts.cents}</sup>
+                  <span className="ml-1">€</span>
                 </div>
               </div>
             </div>
 
             {/* Nadpis: Vaše produkty */}
-            <h2 className="text-[13px] mb-2.5 px-2 font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+            <h2 className="text-[15px] mb-2.5 px-1 text-gray-500 dark:text-gray-400">
               Vaše produkty
             </h2>
 
-            {/* KARTA: SPACE ÚČET */}
-            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden transition-all duration-300 bg-white dark:bg-[#1c1c24] shadow-sm border border-gray-100 dark:border-white/5 hover:shadow-md">
-              {/* Tmavofialový akcentový prúžok navrchu karty */}
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#2d124d]" />
+            {/* KARTA: ÚČET */}
+            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#2d2a8f]" />
 
-              <Link
-                to="/platby"
-                className="block cursor-pointer group active:opacity-90"
-                title="Otvoriť detail účtu a transakcie"
-              >
-                <div className="flex justify-between items-start mb-2 mt-1">
+              <Link to="/platby" className="block cursor-pointer active:opacity-90" title="Otvoriť detail účtu">
+                <div className="flex justify-between items-start mt-1">
                   <div>
-                    {/* Výrazný tučný názov SPACE účet */}
-                    <h3 className="text-[20px] font-extrabold text-gray-900 dark:text-white group-hover:text-[#196ee6] dark:group-hover:text-[#4f95ff] transition-colors tracking-tight">
-                      SPACE účet
-                    </h3>
-                    {/* IBAN vo formáte SK89 0900 0000 00XX XXXX XXXX */}
-                    <p className="text-[12px] font-mono text-gray-500 dark:text-gray-400 mt-0.5">
-                      {formatIbanDisplay(s.iban)}
+                    <h3 className="text-[19px] font-semibold text-[#1b2a4a] dark:text-white">Účet</h3>
+                    <div
+                      className={`mt-1 text-[32px] font-bold flex items-baseline tracking-tight ${
+                        totalParts.isNegative ? "text-[#c8302f] dark:text-[#ff5252]" : "text-[#1b2a4a] dark:text-white"
+                      }`}
+                    >
+                      {!hidden && totalParts.isNegative && <span>-</span>}
+                      <span>{hidden ? "••••" : totalParts.whole}</span>
+                      <span>,</span>
+                      <sup className="text-[15px] font-bold top-[-0.7em] ml-0.5 leading-none select-none">
+                        {hidden ? "••" : totalParts.cents}
+                      </sup>
+                      <span className="ml-1 select-none">€</span>
+                      <button
+                        type="button"
+                        aria-label={hidden ? "Zobraziť zostatok" : "Skryť zostatok"}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleHidden(); }}
+                        className="ml-3 self-center rounded-full p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10"
+                      >
+                        {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    <p className="mt-1 text-[15px] text-gray-500 dark:text-gray-400">
+                      {hidden ? "•••• € vlastné zdroje" : `${formatEur(total)} vlastné zdroje`}
                     </p>
                   </div>
-
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center bg-blue-50 dark:bg-gray-800 text-[#196ee6] dark:text-blue-400 shadow-sm group-hover:scale-105 transition-transform">
-                    <span className="font-serif italic font-bold text-2xl lowercase leading-none select-none">g</span>
-                  </div>
-                </div>
-
-                {/* Zostatok: Disponibilný zostatok veľkým písmom s centami v sup a pod ním Účtovný zostatok */}
-                <div className="my-3.5">
-                  <div
-                    className={`text-[34px] font-bold flex items-baseline tracking-tight ${
-                      totalParts.isNegative
-                        ? "text-[#e63946] dark:text-[#ff5252]"
-                        : "text-gray-900 dark:text-white"
-                    }`}
-                  >
-                    {totalParts.isNegative && <span className="mr-0.5">-</span>}
-                    <span>{totalParts.whole}</span>
-                    <span>,</span>
-                    <sup className="text-[19px] font-bold top-[-0.45em] ml-0.5 leading-none select-none">
-                      {totalParts.cents}
-                    </sup>
-                    <span className="ml-1 text-[22px] font-semibold select-none">€</span>
-                  </div>
-
-                  {/* Účtovný zostatok */}
-                  <div className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400 mt-1">
-                    <span>Účtovný zostatok:</span>
-                    <span className="font-semibold text-gray-700 dark:text-gray-300">
-                      {formatEur(total)}
-                    </span>
-                  </div>
+                  <img
+                    src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=160&auto=format&fit=crop&q=80"
+                    alt=""
+                    className="w-14 h-14 rounded-full object-cover shrink-0"
+                  />
                 </div>
               </Link>
 
-              <div className="flex justify-between items-center mt-4 pt-3 border-t border-gray-100 dark:border-white/5 relative z-10">
+              <div className="flex justify-between items-center mt-4">
                 <Link
                   to="/nova-platba"
-                  className="px-5 py-2.5 rounded-full font-bold text-[14px] transition-colors bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff] hover:bg-blue-100 dark:hover:bg-[#2a3447] active:scale-95"
+                  className="px-6 py-2.5 rounded-full font-semibold text-[15px] bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff] active:scale-95"
                 >
                   Nová platba
                 </Link>
-                <Link
-                  to="/platby"
-                  className="p-2 rounded-full transition-colors text-[#196ee6] dark:text-[#4f95ff] hover:bg-gray-50 dark:hover:bg-white/5 active:scale-95"
-                  title="Všetky pohyby"
-                >
+                <Link to="/platby" className="p-2 rounded-full text-[#196ee6] dark:text-[#4f95ff]" title="Detail účtu">
                   <MoreVertical size={22} />
                 </Link>
               </div>
@@ -643,7 +610,7 @@ function GeorgePrehladModern() {
                 <div className="flex items-center justify-between mb-4 relative z-10">
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-bold tracking-tight text-white/95">
-                      SPACE karta
+                      Virtuálna karta
                     </span>
                     <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/80">
                       Debetná
@@ -686,44 +653,57 @@ function GeorgePrehladModern() {
 
                   <div className="text-right">
                     <p className="text-[9px] uppercase tracking-wider text-white/50">Platnosť</p>
-                    <p className="text-[11px] font-mono text-white/80 mt-0.5">10/28</p>
+                    <p className="text-[11px] font-mono text-white/80 mt-0.5">10/31</p>
                   </div>
 
-                  {/* Oficiálne logo VISA v pravom dolnom rohu */}
+                  {/* Logo Mastercard */}
                   <div className="pl-2">
-                    <div className="bg-white/95 rounded-md px-2 py-1 shadow-sm flex items-center justify-center">
-                      <svg className="h-3.5 w-auto" viewBox="0 0 36 12" fill="none">
-                        <path d="M14.5 1.2L12.2 11.8H9.4L11.7 1.2h2.8zm11.3 7c-.1-.7-.7-1.2-1.8-1.5-.7-.2-1.1-.4-1.1-.7 0-.2.3-.5.9-.5.7 0 1.5.2 2.1.5l.3-2.3c-.6-.2-1.4-.4-2.4-.4-2.6 0-4.4 1.4-4.4 3.3 0 1.5 1.3 2.3 2.3 2.8 1.1.5 1.4.8 1.4 1.3 0 .7-.8 1-1.6 1-.9 0-1.8-.2-2.5-.6l-.4 2.4c.7.3 1.8.5 2.8.5 2.8 0 4.6-1.4 4.6-3.4-.1-1.3-.8-2-1.6-2.5zm7.7-6.9h-2.2c-.7 0-1.2.2-1.5.9L25.6 11.8h3l.6-1.7h3.7l.3 1.7h2.7l-2.4-10.5zm-3.2 6.5l1.5-4.2.9 4.2h-2.4zM9 1.2L6.3 8.4 5.9 6.8c-.5-1.7-2-3.6-3.7-4.5L4.8 11.8h3l4.5-10.6H9z" fill="#00579f"/>
-                      </svg>
-                    </div>
+                    <svg className="h-7 w-auto" viewBox="0 0 48 30" aria-label="Mastercard">
+                      <circle cx="17" cy="15" r="13" fill="#eb001b" />
+                      <circle cx="31" cy="15" r="13" fill="#f79e1b" />
+                      <path d="M24 4.2a13 13 0 0 1 0 21.6a13 13 0 0 1 0-21.6z" fill="#ff5f00" />
+                    </svg>
                   </div>
                 </div>
               </Link>
             </div>
 
             {/* Karta: Investície a sporenie */}
-            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden transition-colors duration-300 bg-white dark:bg-[#1c1c24] shadow-sm border border-gray-100 dark:border-white/5">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#3a2072]" />
-              <div className="flex justify-between items-start mb-2 mt-1">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Investície a sporenie</h3>
-                <div className="w-11 h-11 rounded-full flex items-center justify-center text-xl bg-gray-100 dark:bg-gray-800 shadow-sm">
-                  🏢
+            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#2d2a8f]" />
+              <div className="flex justify-between items-start mt-1">
+                <div>
+                  <h3 className="text-[19px] font-semibold text-[#1b2a4a] dark:text-white">Investície</h3>
+                  <div className="text-[32px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1">
+                    <span>{hidden ? "••••" : savParts.whole}</span>
+                    <span>,</span>
+                    <sup className="text-[15px] font-bold top-[-0.7em] ml-0.5 leading-none">{hidden ? "••" : savParts.cents}</sup>
+                    <span className="ml-1">€</span>
+                  </div>
                 </div>
+                <img src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=160&auto=format&fit=crop&q=80" alt="" className="w-14 h-14 rounded-full object-cover" />
               </div>
-              <div className="mb-4">
-                <div className="text-[30px] font-bold flex items-baseline tracking-tight text-gray-900 dark:text-white">
-                  <span>0</span>
-                  <span>,</span>
-                  <sup className="text-[17px] font-bold top-[-0.45em] ml-0.5 leading-none">00</sup>
-                  <span className="ml-1 text-[20px] font-semibold">€</span>
-                </div>
-              </div>
-              <Link
-                to="/sporenie"
-                className="px-5 py-2.5 rounded-full font-bold text-[14px] transition-colors inline-block bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff] hover:bg-blue-100 dark:hover:bg-[#2a3447]"
-              >
-                Spravovať sporenie
+              <Link to="/sporenie" className="mt-4 px-5 py-2.5 rounded-full font-semibold text-[15px] inline-block bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]">
+                Vyhľadať a kúpiť
               </Link>
+            </div>
+
+            {/* Karta: Moneyback */}
+            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#a94fb5]" />
+              <div className="flex justify-between items-start mt-1">
+                <div className="pr-3">
+                  <h3 className="text-[19px] font-semibold text-[#1b2a4a] dark:text-white">Moneyback</h3>
+                  <span className="mt-1 inline-block rounded-full bg-[#eef3ff] dark:bg-[#242b3b] px-2.5 py-0.5 text-[12px] font-semibold text-[#196ee6] dark:text-[#4f95ff]">7 nových ponúk</span>
+                  <p className="mt-2 text-[15px] text-gray-500 dark:text-gray-400">Objavte ponuky od najlepších značiek a získajte späť časť svojich peňazí.</p>
+                </div>
+                <div className="w-14 h-14 shrink-0 rounded-full flex items-center justify-center bg-[#fbeefc] dark:bg-[#3a2340] text-[#a94fb5]">
+                  <ShoppingBag size={24} />
+                </div>
+              </div>
+              <button type="button" className="mt-4 px-5 py-2.5 rounded-full font-semibold text-[15px] bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]">
+                Prezrite si 7 nových ponúk
+              </button>
             </div>
 
             {/* Sekcia: Posledné pohyby */}
@@ -793,58 +773,6 @@ function GeorgePrehladModern() {
         </>
       )}
 
-      {/* Spodná navigácia */}
-      <nav className="fixed bottom-0 left-0 w-full pb-safe pt-2 px-2 z-50 transition-colors duration-300 bg-white dark:bg-[#121216] border-t border-gray-100 dark:border-gray-800 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-none">
-        <div className="flex justify-around items-center pb-2">
-          <button
-            type="button"
-            onClick={() => setCurrentViewMode("dashboard")}
-            className={`flex flex-col items-center p-2 transition-colors ${currentViewMode === "dashboard" ? "text-[#196ee6] dark:text-[#4f95ff]" : "text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"}`}
-          >
-            <div className="relative">
-              <div className="font-serif italic text-2xl font-bold leading-none mb-1 select-none">
-                g
-              </div>
-              {currentViewMode === "dashboard" && <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#196ee6] dark:bg-[#4f95ff]" />}
-            </div>
-            <span className="text-[11px] font-bold mt-1">Prehľad</span>
-          </button>
-
-          <Link
-            to="/rozpocet"
-            className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <Activity size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">FIT</span>
-          </Link>
-
-          <Link
-            to="/sporenie"
-            className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <PieChart size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">Invest</span>
-          </Link>
-
-          <Link
-            to="/karty"
-            className="flex flex-col items-center p-2 transition-colors text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <Compass size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">Karty</span>
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => setCurrentViewMode("profile")}
-            className={`flex flex-col items-center p-2 transition-colors ${currentViewMode === "profile" ? "text-[#196ee6] dark:text-[#4f95ff]" : "text-[#8e95a3] hover:text-gray-600 dark:hover:text-gray-300"}`}
-            aria-current={currentViewMode === "profile" ? "page" : undefined}
-          >
-            <MessageSquare size={24} strokeWidth={1.5} />
-            <span className="text-[11px] mt-1 font-medium">Profil</span>
-          </button>
-        </div>
-      </nav>
     </div>
   );
 }

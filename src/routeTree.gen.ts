@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as McpRouteImport } from './routes/mcp'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedCentrumPlatiebRouteImport } from './routes/_authenticated/centrum-platieb'
 import { Route as AuthenticatedKartyRouteImport } from './routes/_authenticated/karty'
 import { Route as AuthenticatedNastaveniaRouteImport } from './routes/_authenticated/nastavenia'
 import { Route as AuthenticatedNovaPlatbaRouteImport } from './routes/_authenticated/nova-platba'
@@ -21,6 +24,7 @@ import { Route as AuthenticatedRozpocetRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSporenieRouteImport } from './routes/_authenticated/sporenie'
 import { Route as AuthenticatedSvetovyCasRouteImport } from './routes/_authenticated/svetovy-cas'
 import { Route as AuthenticatedUpozorneniaRouteImport } from './routes/_authenticated/upozornenia'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedTransakciaIdRouteImport } from './routes/_authenticated/transakcia.$id'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
@@ -32,11 +36,28 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCentrumPlatiebRoute =
+  AuthenticatedCentrumPlatiebRouteImport.update({
+    id: '/centrum-platieb',
+    path: '/centrum-platieb',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedKartyRoute = AuthenticatedKartyRouteImport.update({
   id: '/karty',
   path: '/karty',
@@ -83,6 +104,11 @@ const AuthenticatedUpozorneniaRoute =
     path: '/upozornenia',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedTransakciaIdRoute =
   AuthenticatedTransakciaIdRouteImport.update({
     id: '/transakcia/$id',
@@ -93,6 +119,9 @@ const AuthenticatedTransakciaIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/centrum-platieb': typeof AuthenticatedCentrumPlatiebRoute
   '/karty': typeof AuthenticatedKartyRoute
   '/nastavenia': typeof AuthenticatedNastaveniaRoute
   '/nova-platba': typeof AuthenticatedNovaPlatbaRoute
@@ -102,10 +131,14 @@ export interface FileRoutesByFullPath {
   '/sporenie': typeof AuthenticatedSporenieRoute
   '/svetovy-cas': typeof AuthenticatedSvetovyCasRoute
   '/upozornenia': typeof AuthenticatedUpozorneniaRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/transakcia/$id': typeof AuthenticatedTransakciaIdRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/centrum-platieb': typeof AuthenticatedCentrumPlatiebRoute
   '/karty': typeof AuthenticatedKartyRoute
   '/nastavenia': typeof AuthenticatedNastaveniaRoute
   '/nova-platba': typeof AuthenticatedNovaPlatbaRoute
@@ -116,12 +149,16 @@ export interface FileRoutesByTo {
   '/svetovy-cas': typeof AuthenticatedSvetovyCasRoute
   '/upozornenia': typeof AuthenticatedUpozorneniaRoute
   '/': typeof AuthenticatedIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/transakcia/$id': typeof AuthenticatedTransakciaIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/mcp': typeof McpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/_authenticated/centrum-platieb': typeof AuthenticatedCentrumPlatiebRoute
   '/_authenticated/karty': typeof AuthenticatedKartyRoute
   '/_authenticated/nastavenia': typeof AuthenticatedNastaveniaRoute
   '/_authenticated/nova-platba': typeof AuthenticatedNovaPlatbaRoute
@@ -132,6 +169,7 @@ export interface FileRoutesById {
   '/_authenticated/svetovy-cas': typeof AuthenticatedSvetovyCasRoute
   '/_authenticated/upozornenia': typeof AuthenticatedUpozorneniaRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/_authenticated/transakcia/$id': typeof AuthenticatedTransakciaIdRoute
 }
 export interface FileRouteTypes {
@@ -139,6 +177,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
+    | '/centrum-platieb'
     | '/karty'
     | '/nastavenia'
     | '/nova-platba'
@@ -148,10 +189,14 @@ export interface FileRouteTypes {
     | '/sporenie'
     | '/svetovy-cas'
     | '/upozornenia'
+    | '/.lovable/oauth/consent'
     | '/transakcia/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
+    | '/centrum-platieb'
     | '/karty'
     | '/nastavenia'
     | '/nova-platba'
@@ -162,11 +207,15 @@ export interface FileRouteTypes {
     | '/svetovy-cas'
     | '/upozornenia'
     | '/'
+    | '/.lovable/oauth/consent'
     | '/transakcia/$id'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/mcp'
+    | '/.well-known/oauth-protected-resource'
+    | '/_authenticated/centrum-platieb'
     | '/_authenticated/karty'
     | '/_authenticated/nastavenia'
     | '/_authenticated/nova-platba'
@@ -177,12 +226,16 @@ export interface FileRouteTypes {
     | '/_authenticated/svetovy-cas'
     | '/_authenticated/upozornenia'
     | '/_authenticated/'
+    | '/.lovable/oauth/consent'
     | '/_authenticated/transakcia/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  McpRoute: typeof McpRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -201,11 +254,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/': {
       id: '/_authenticated/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/centrum-platieb': {
+      id: '/_authenticated/centrum-platieb'
+      path: '/centrum-platieb'
+      fullPath: '/centrum-platieb'
+      preLoaderRoute: typeof AuthenticatedCentrumPlatiebRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/karty': {
@@ -271,6 +345,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUpozorneniaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/transakcia/$id': {
       id: '/_authenticated/transakcia/$id'
       path: '/transakcia/$id'
@@ -282,6 +363,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedCentrumPlatiebRoute: typeof AuthenticatedCentrumPlatiebRoute
   AuthenticatedKartyRoute: typeof AuthenticatedKartyRoute
   AuthenticatedNastaveniaRoute: typeof AuthenticatedNastaveniaRoute
   AuthenticatedNovaPlatbaRoute: typeof AuthenticatedNovaPlatbaRoute
@@ -296,6 +378,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedCentrumPlatiebRoute: AuthenticatedCentrumPlatiebRoute,
   AuthenticatedKartyRoute: AuthenticatedKartyRoute,
   AuthenticatedNastaveniaRoute: AuthenticatedNastaveniaRoute,
   AuthenticatedNovaPlatbaRoute: AuthenticatedNovaPlatbaRoute,
@@ -315,6 +398,10 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  McpRoute: McpRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

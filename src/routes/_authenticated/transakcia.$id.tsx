@@ -96,7 +96,12 @@ function Detail() {
   return (
     <AppShell>
       <div className="transaction-detail min-h-screen bg-detail-background px-4 pb-10 pt-5 font-sans text-foreground">
-        <Link to="/platby" aria-label="Späť na platby" className="mb-4 inline-grid size-10 place-items-center text-detail-action">
+        <Link
+          to="/platby"
+          aria-label="Späť"
+          onClick={(e) => { if (window.history.length > 1) { e.preventDefault(); window.history.back(); } }}
+          className="mb-4 inline-grid size-10 place-items-center text-detail-action"
+        >
           <ArrowLeft className="size-7" />
         </Link>
 

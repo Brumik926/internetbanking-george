@@ -122,6 +122,39 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_templates: {
+        Row: {
+          amount: number
+          created_at: string
+          iban: string
+          id: string
+          name: string
+          title: string
+          user_id: string
+          vs: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          iban: string
+          id?: string
+          name: string
+          title: string
+          user_id?: string
+          vs?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          iban?: string
+          id?: string
+          name?: string
+          title?: string
+          user_id?: string
+          vs?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

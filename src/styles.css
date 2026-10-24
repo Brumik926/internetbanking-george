@@ -44,6 +44,7 @@
   --color-detail-action: var(--detail-action);
   --color-detail-action-surface: var(--detail-action-surface);
   --color-detail-direction: var(--detail-direction);
+  --color-fit-overlay: var(--fit-overlay);
   --font-display: var(--font-display);
   --font-sans: var(--font-body);
 }
@@ -58,6 +59,7 @@
   --detail-action: #4a96fa;
   --detail-action-surface: #253249;
   --detail-direction: #142f3d;
+  --fit-overlay: #00000080;
 
   /* Nočný režim (Dark mode) */
   --background: #0f141c;
@@ -93,12 +95,13 @@
 }
 
 .light {
-  --detail-background: var(--background);
-  --detail-surface: var(--surface);
-  --detail-muted: var(--muted-foreground);
-  --detail-action: var(--primary);
-  --detail-action-surface: var(--accent);
-  --detail-direction: var(--surface-2);
+  /* Detail-only light values — own literals so changes here never touch global tokens. */
+  --detail-background: #f4f6f8;
+  --detail-surface: #ffffff;
+  --detail-muted: #64748b;
+  --detail-action: #196ee6;
+  --detail-action-surface: #e8f0fe;
+  --detail-direction: #edf1f7;
   /* Denný režim (Light mode presne podľa videa) */
   --background: #f4f6fa;
   --foreground: #111827;
@@ -145,6 +148,19 @@
   font-family: Arial, system-ui, sans-serif;
   letter-spacing: 0;
 }
+
+.fit-progress {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--detail-action-surface);
+}
+.fit-progress::-webkit-progress-bar { background: var(--detail-action-surface); }
+.fit-progress::-webkit-progress-value { background: var(--detail-action); border-radius: 999px; }
+.fit-progress::-moz-progress-bar { background: var(--detail-action); border-radius: 999px; }
+.fit-progress-over::-webkit-progress-value { background: var(--expense); }
+.fit-progress-over::-moz-progress-bar { background: var(--expense); }
 
 
 @keyframes screen-enter {
