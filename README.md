@@ -6,6 +6,7 @@ Sme najväčšia banka na Slovensku s obľúbeným internetbankingom George. Chc
 
 ## Build with Lovable
 
+
 Continue developing this project in the [Lovable editor]https://lovable.dev/projects/2fd5c1ca-8333-4013-b476-c63b7d352dc0
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
