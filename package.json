@@ -15,7 +15,8 @@
   "overrides": {
     "rolldown": "1.2.1",
     "js-yaml": "$js-yaml",
-    "brace-expansion": "^1.1.21"
+    "brace-expansion": "^1.1.21",
+    "dompurify": "^3.4.17"
   },
   "dependencies": {
     "@eslint/eslintrc": "^3.3.7",
