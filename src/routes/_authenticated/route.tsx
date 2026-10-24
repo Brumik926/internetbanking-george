@@ -15,11 +15,16 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     try {
       const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) throw redirect({ to: "/auth" });
+      if (error || !data.user) {
+        // Neplatný/expirovaný token: vyčistiť lokálnu reláciu, aby sa používateľ mohol znova prihlásiť
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        throw redirect({ to: "/auth" });
+      }
       return { user: data.user };
     } catch (error) {
       if (isRedirect(error)) throw error;
-      throw new Error("Prihlásenie sa nepodarilo overiť.", { cause: error });
+      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      throw redirect({ to: "/auth" });
     }
   },
   component: AuthenticatedLayout,
