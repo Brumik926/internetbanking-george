@@ -524,13 +524,7 @@ export default function UcetDetail() {
                   {formattedOwnResources}
                 </p>
               </div>
-
-              <div className="w-14 h-14 rounded-full overflow-hidden shrink-0 bg-detail-action-surface">
-                <img
-                  src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=160&auto=format&fit=crop&q=80"
-                  alt="Účet"
-                  className="w-full h-full object-cover"
-                />
+              <SlspLogo size={56} />
               </div>
             </div>
           </div>
