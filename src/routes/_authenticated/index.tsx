@@ -108,14 +108,19 @@ function getAvatarColor(name?: string | null): string {
 function MerchantLogo({ counterparty, category }: { counterparty: string; category?: string }) {
   const name = (counterparty || "").toLowerCase();
 
-  if (
-    name.includes("sporiteľňa") || 
-    name.includes("sporitelna") || 
-    name.includes("slsp") || 
-    name.includes("poplatok") || 
-    category === "Poplatky"
-  ) {
-    return <SlspLogo />;
+  const isBankFee =
+    name.includes("poplatok") ||
+    name.includes("vedenie účtu") ||
+    name.includes("vedenie uctu") ||
+    name.includes("správa účtu") ||
+    name.includes("sprava uctu") ||
+    name.includes("slsp") ||
+    name.includes("sporiteľňa") ||
+    name.includes("sporitelna") ||
+    (category || "").toLowerCase().includes("poplatk");
+
+  if (isBankFee) {
+    return <SlspLogo size={40} className="shadow-sm" />;
   }
 
   if (name.includes("kaufland")) {
@@ -205,7 +210,6 @@ function MerchantLogo({ counterparty, category }: { counterparty: string; catego
     );
   }
 
-  // Fallback: farebný kruh s iniciálami
   const initials = getInitials(counterparty);
   const colorClass = getAvatarColor(counterparty);
 
@@ -225,57 +229,96 @@ interface ListItemProps {
   onClick?: () => void;
 }
 
-function ListItem({
-  icon: Icon,
-  title,
-  subtitle,
-  badge,
-  isLast = false,
-  onClick,
-}: ListItemProps) {
+function ListItem({ icon: Icon, title, subtitle, badge, isLast, onClick }: ListItemProps) {
   return (
-    <button
-      type="button"
+    <div
       onClick={onClick}
-      className={`w-full flex items-center justify-between py-4 text-left px-1 transition-colors ${
+      className={`flex items-center justify-between py-3.5 cursor-pointer active:opacity-60 transition-opacity ${
         !isLast ? "border-b border-gray-100 dark:border-white/5" : ""
-      } hover:bg-gray-50/50 dark:hover:bg-white/5`}
+      }`}
     >
-      <div className="flex items-center gap-4">
-        <Icon size={24} className="text-[#196ee6] dark:text-[#4f95ff]" strokeWidth={1.5} />
+      <div className="flex items-center gap-3.5">
+        <div className="text-gray-500 dark:text-gray-400">
+          <Icon size={22} strokeWidth={1.8} />
+        </div>
         <div>
-          <div className="text-[16px] font-bold text-[#111827] dark:text-white">{title}</div>
+          <div className="text-[15px] font-semibold text-gray-900 dark:text-white leading-tight">
+            {title}
+          </div>
           {subtitle && (
-            <div className="text-[13px] text-gray-500 dark:text-gray-400 mt-0.5">{subtitle}</div>
+            <div className="text-[12px] text-gray-400 dark:text-gray-500 mt-0.5">{subtitle}</div>
           )}
         </div>
       </div>
-      {badge && (
-        <span className="bg-[#196ee6] dark:bg-[#4f95ff] text-white text-[12px] font-bold px-2.5 py-1 rounded-md">
-          {badge}
-        </span>
-      )}
-    </button>
+      <div className="flex items-center gap-2">
+        {badge && (
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#196ee6] text-white">
+            {badge}
+          </span>
+        )}
+        <ChevronRight size={18} className="text-gray-300 dark:text-gray-600" />
+      </div>
+    </div>
   );
 }
 
-function GeorgePrehladModern() {
-  const navigate = useNavigate();
+export function GeorgePrehladModern() {
   const s = useBank();
+  const navigate = useNavigate();
+
   const [currentViewMode, setCurrentViewMode] = useState<"dashboard" | "profile">("dashboard");
+  const [userName, setUserName] = useState("Tomáš Lizák");
 
-  const total = balance(s);
-  const { income, expense } = monthTotals(s);
-  const userName = s.owner || "Tomáš Lizák";
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const u = data.user;
+      if (!u) return;
+      const meta = u.user_metadata || {};
+      const full =
+        meta.full_name ||
+        meta.name ||
+        (meta.first_name && meta.last_name ? `${meta.first_name} ${meta.last_name}` : null);
+      if (full) {
+        setUserName(full);
+      } else if (u.email) {
+        const local = u.email.split("@")[0] || "";
+        const cleaned = local.replace(/[0-9._-]+/g, " ").trim();
+        if (cleaned) {
+          setUserName(
+            cleaned
+              .split(" ")
+              .filter(Boolean)
+              .map((w: string) => w[0].toUpperCase() + w.slice(1))
+              .join(" ")
+          );
+        }
+      }
+    });
+  }, []);
 
-  const totalParts = splitAmount(total);
-  const savings = (s.goals ?? []).reduce((sum, g) => sum + (g.saved || 0), 0);
-  const savParts = splitAmount(savings);
   const [hidden, setHidden] = useState(false);
-  useEffect(() => { setHidden(localStorage.getItem("george-hide-balance") === "1"); }, []);
-  const toggleHidden = () => setHidden((h) => { localStorage.setItem("george-hide-balance", h ? "0" : "1"); return !h; });
-  const expParts = splitAmount(expense);
-  const incParts = splitAmount(income);
+  useEffect(() => {
+    try {
+      setHidden(localStorage.getItem("george-hide-balance") === "1");
+    } catch {}
+  }, []);
+
+  function toggleHidden() {
+    setHidden((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("george-hide-balance", next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+  }
+
+  const totals = monthTotals(s.transactions);
+  const total = balance(s.transactions);
+  const totalParts = splitAmount(total);
+  const expParts = splitAmount(totals.expenses);
+  const incParts = splitAmount(totals.income);
+  const savParts = splitAmount(s.savingsBalance ?? 0);
 
   const cardLastFour = "3302";
 
@@ -291,7 +334,10 @@ function GeorgePrehladModern() {
 
   // --- OBSAH PROFILU ---
   const profileContent = (
-    <div className="min-h-screen font-sans pb-16 transition-colors duration-300 bg-[#f4f6f9] dark:bg-[#0e0e12] text-gray-900 dark:text-white">
+    <div
+      className="min-h-screen pb-16 transition-colors duration-300 bg-[#f4f6f9] dark:bg-[#0e0e12] text-gray-900 dark:text-white"
+      style={{ fontFamily: "'Mulish', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+    >
       <main className="px-4 max-w-md mx-auto pt-6">
         <div className="flex justify-between items-center pb-4 mb-2">
           <button
@@ -306,7 +352,7 @@ function GeorgePrehladModern() {
             <button
               type="button"
               onClick={handleLogout}
-              className="font-bold text-[15px] hover:underline flex items-center gap-1.5 text-[#196ee6] dark:text-[#4f95ff]"
+              className="font-bold text-[14px] hover:underline flex items-center gap-1.5 text-[#196ee6] dark:text-[#4f95ff]"
             >
               <LogOut size={18} />
               Odhlásiť
@@ -314,12 +360,12 @@ function GeorgePrehladModern() {
           </div>
         </div>
 
-        <h1 className="text-[28px] font-bold mb-6 text-[#111827] dark:text-white">Profil</h1>
+        <h1 className="text-[26px] font-bold mb-6 text-[#111827] dark:text-white">Profil</h1>
 
         {/* Karta používateľa */}
         <div className="rounded-3xl p-5 mb-8 shadow-sm border flex justify-between items-center bg-white dark:bg-[#1c1c24] border-gray-100 dark:border-white/5">
           <div>
-            <span className="text-[18px] font-bold block text-gray-900 dark:text-white">
+            <span className="text-[17px] font-bold block text-gray-900 dark:text-white">
               {userName}
             </span>
             <span className="text-[12px] font-mono text-gray-400 mt-1 block">
@@ -333,7 +379,7 @@ function GeorgePrehladModern() {
 
         {/* Sekcia: Doplnky */}
         <div className="mb-8">
-          <h2 className="text-[14px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
+          <h2 className="text-[13px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
             Doplnky
           </h2>
           <div className="rounded-3xl px-5 py-1 shadow-sm border bg-white dark:bg-[#1c1c24] border-gray-100 dark:border-white/5">
@@ -358,7 +404,7 @@ function GeorgePrehladModern() {
 
         {/* Sekcia: Profil nastavenia */}
         <div className="mb-8">
-          <h2 className="text-[14px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
+          <h2 className="text-[13px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
             Profil
           </h2>
           <div className="rounded-3xl px-5 py-1 shadow-sm border bg-white dark:bg-[#1c1c24] border-gray-100 dark:border-white/5">
@@ -381,7 +427,7 @@ function GeorgePrehladModern() {
 
         {/* Sekcia: Aplikácia */}
         <div className="mb-8">
-          <h2 className="text-[14px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
+          <h2 className="text-[13px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
             Aplikácia
           </h2>
           <div className="rounded-3xl px-5 py-1 shadow-sm border bg-white dark:bg-[#1c1c24] border-gray-100 dark:border-white/5">
@@ -399,7 +445,7 @@ function GeorgePrehladModern() {
 
         {/* Sekcia: O aplikácii */}
         <div className="mb-8">
-          <h2 className="text-[14px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
+          <h2 className="text-[13px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
             O aplikácii
           </h2>
           <div className="rounded-3xl px-5 py-1 shadow-sm border bg-white dark:bg-[#1c1c24] border-gray-100 dark:border-white/5">
@@ -411,7 +457,7 @@ function GeorgePrehladModern() {
 
         {/* Sekcia: Ďalšie aplikácie */}
         <div className="mb-10">
-          <h2 className="text-[14px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
+          <h2 className="text-[13px] font-bold mb-3 px-1 text-gray-900 dark:text-gray-400">
             Ďalšie aplikácie
           </h2>
           <div className="rounded-3xl px-5 py-1 shadow-sm border bg-white dark:bg-[#1c1c24] border-gray-100 dark:border-white/5">
@@ -428,7 +474,7 @@ function GeorgePrehladModern() {
         {/* Pätička */}
         <div className="text-center pb-8 flex flex-col items-center">
           <div className="flex items-center justify-center mb-4">
-            <span className="font-bold text-[16px] tracking-tight text-[#111827] dark:text-white">
+            <span className="font-bold text-[15px] tracking-tight text-[#111827] dark:text-white">
               Slovenská sporiteľňa
             </span>
           </div>
@@ -443,15 +489,16 @@ function GeorgePrehladModern() {
 
   // --- SHELL: DASHBOARD ---
   return (
-    <div className="min-h-screen font-sans transition-colors duration-300 bg-[#f4f6f9] dark:bg-[#0e0e12] text-gray-900 dark:text-white pb-28">
+    <div
+      className="min-h-screen transition-colors duration-300 bg-[#f4f6f9] dark:bg-[#0e0e12] text-gray-900 dark:text-white pb-28"
+      style={{ fontFamily: "'Mulish', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" }}
+    >
       {currentViewMode === "profile" ? profileContent : (
         <>
           {/* Modrá hlavička */}
-          <div className="pt-6 pb-24 px-4 transition-colors duration-300 bg-[#196ee6] dark:bg-[#0e0e12] text-white rounded-b-3xl dark:rounded-none">
+          <div className="pt-6 pb-20 px-4 transition-colors duration-300 bg-[#196ee6] dark:bg-[#0e0e12] text-white rounded-b-3xl dark:rounded-none">
             <header className="flex justify-end items-center">
-
-
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Link
                   to="/platby"
                   className="text-white hover:bg-white/10 p-2 rounded-full transition-colors"
@@ -471,7 +518,7 @@ function GeorgePrehladModern() {
                 <button
                   type="button"
                   onClick={() => setCurrentViewMode("profile")}
-                  className="relative block cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                  className="relative block cursor-pointer transition-transform hover:scale-105 active:scale-95 ml-1"
                   title="Profil"
                 >
                   <div className="w-10 h-10 rounded-full overflow-hidden border-2 shadow-sm flex items-center justify-center font-bold text-sm bg-white/20 border-white text-white dark:bg-gray-700 dark:border-gray-600">
@@ -482,13 +529,13 @@ function GeorgePrehladModern() {
               </div>
             </header>
 
-            <h1 className="text-[34px] font-extrabold mt-6 tracking-tight">
+            <h1 className="text-[26px] font-bold mt-4 tracking-tight">
               Prehľad
             </h1>
           </div>
 
           {/* Hlavný obsah */}
-          <main className="px-4 -mt-14 relative z-10">
+          <main className="px-4 -mt-12 relative z-10">
             {/* Sekcia: Výdavky a Príjmy za aktuálny mesiac */}
             <div className="grid grid-cols-2 gap-3 mb-5">
               <Link
@@ -496,57 +543,57 @@ function GeorgePrehladModern() {
                 className="rounded-3xl p-4 block active:scale-[0.98] bg-white dark:bg-[#1c1c24] shadow-sm"
               >
                 <div className="flex justify-between items-start">
-                  <span className="text-[15px] text-[#1b2a4a] dark:text-gray-200 leading-tight">
+                  <span className="text-[13px] font-medium text-[#1b2a4a] dark:text-gray-200 leading-snug">
                     Výdavky za {MONTHS[new Date().getMonth()]?.toLowerCase()}
                   </span>
-                  <div className="w-9 h-9 shrink-0 rounded-full flex items-center justify-center bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]">
-                    <BarChart3 size={16} strokeWidth={2.5} />
+                  <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]">
+                    <BarChart3 size={15} strokeWidth={2.5} />
                   </div>
                 </div>
-                <div className="text-[20px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1">
+                <div className="text-[19px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1.5">
                   <span>{expParts.whole}</span>
                   <span>,</span>
-                  <sup className="text-[11px] font-bold top-[-0.6em] ml-0.5">{expParts.cents}</sup>
+                  <sup className="text-[11px] font-bold top-[-0.55em] ml-0.5">{expParts.cents}</sup>
                   <span className="ml-1">€</span>
                 </div>
-                <div className="text-[13px] text-gray-500">Neurčený rozpočet</div>
+                <div className="text-[12px] text-gray-500 mt-0.5">Neurčený rozpočet</div>
               </Link>
 
               <div className="rounded-3xl p-4 bg-white dark:bg-[#1c1c24] shadow-sm">
-                <span className="text-[15px] text-[#1b2a4a] dark:text-gray-200 leading-tight block min-h-9">
+                <span className="text-[13px] font-medium text-[#1b2a4a] dark:text-gray-200 leading-snug block min-h-8">
                   Príjmy za {MONTHS[new Date().getMonth()]?.toLowerCase()}
                 </span>
-                <div className="text-[20px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1">
+                <div className="text-[19px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1.5">
                   <span>{incParts.whole}</span>
                   <span>,</span>
-                  <sup className="text-[11px] font-bold top-[-0.6em] ml-0.5">{incParts.cents}</sup>
+                  <sup className="text-[11px] font-bold top-[-0.55em] ml-0.5">{incParts.cents}</sup>
                   <span className="ml-1">€</span>
                 </div>
               </div>
             </div>
 
             {/* Nadpis: Vaše produkty */}
-            <h2 className="text-[15px] mb-2.5 px-1 text-gray-500 dark:text-gray-400">
+            <h2 className="text-[13px] font-medium mb-2.5 px-1 text-gray-500 dark:text-gray-400">
               Vaše produkty
             </h2>
 
             {/* KARTA: ÚČET */}
-            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#2d2a8f]" />
+            <div className="rounded-3xl p-5 mb-4 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
+              <div className="absolute top-0 left-0 w-full h-1 bg-[#2d2a8f]" />
 
               <Link to="/platby" className="block cursor-pointer active:opacity-90" title="Otvoriť detail účtu">
-                <div className="flex justify-between items-start mt-1">
+                <div className="flex justify-between items-start mt-0.5">
                   <div>
-                    <h3 className="text-[19px] font-semibold text-[#1b2a4a] dark:text-white">Účet</h3>
+                    <h3 className="text-[16px] font-semibold text-[#1b2a4a] dark:text-white">Účet</h3>
                     <div
-                      className={`mt-1 text-[32px] font-bold flex items-baseline tracking-tight ${
-                        totalParts.isNegative ? "text-[#c8302f] dark:text-[#ff5252]" : "text-[#1b2a4a] dark:text-white"
+                      className={`mt-1 text-[25px] font-bold flex items-baseline tracking-tight ${
+                        totalParts.isNegative ? "text-[#d62828] dark:text-[#ff5252]" : "text-[#1b2a4a] dark:text-white"
                       }`}
                     >
                       {!hidden && totalParts.isNegative && <span>-</span>}
                       <span>{hidden ? "••••" : totalParts.whole}</span>
                       <span>,</span>
-                      <sup className="text-[15px] font-bold top-[-0.7em] ml-0.5 leading-none select-none">
+                      <sup className="text-[13px] font-bold top-[-0.55em] ml-0.5 leading-none select-none">
                         {hidden ? "••" : totalParts.cents}
                       </sup>
                       <span className="ml-1 select-none">€</span>
@@ -554,19 +601,19 @@ function GeorgePrehladModern() {
                         type="button"
                         aria-label={hidden ? "Zobraziť zostatok" : "Skryť zostatok"}
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleHidden(); }}
-                        className="ml-3 self-center rounded-full p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10"
+                        className="ml-2.5 self-center rounded-full p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-white/10"
                       >
-                        {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
+                        {hidden ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
-                    <p className="mt-1 text-[15px] text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">
                       {hidden ? "•••• € vlastné zdroje" : `${formatEur(total)} vlastné zdroje`}
                     </p>
                   </div>
                   <img
                     src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=160&auto=format&fit=crop&q=80"
                     alt=""
-                    className="w-14 h-14 rounded-full object-cover shrink-0"
+                    className="w-13 h-13 rounded-full object-cover shrink-0"
                   />
                 </div>
               </Link>
@@ -574,20 +621,20 @@ function GeorgePrehladModern() {
               <div className="flex justify-between items-center mt-4">
                 <Link
                   to="/nova-platba"
-                  className="px-6 py-2.5 rounded-full font-semibold text-[15px] bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff] active:scale-95"
+                  className="px-5 py-2 rounded-full font-medium text-[13px] bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff] active:scale-95"
                 >
                   Nová platba
                 </Link>
                 <Link to="/platby" className="p-2 rounded-full text-[#196ee6] dark:text-[#4f95ff]" title="Detail účtu">
-                  <MoreVertical size={22} />
+                  <MoreVertical size={20} />
                 </Link>
               </div>
             </div>
 
-            {/* SEKCIA: KARTY A ÚVERY (Vizuál plastovej karty s odleskom a logom Visa) */}
-            <div className="mb-5">
+            {/* SEKCIA: KARTY A ÚVERY */}
+            <div className="mb-4">
               <div className="flex items-center justify-between mb-2.5 px-2">
-                <h2 className="text-[13px] font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                <h2 className="text-[12px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                   Karty a úvery
                 </h2>
                 <Link
@@ -603,13 +650,11 @@ function GeorgePrehladModern() {
                 to="/karty"
                 className="group relative block w-full rounded-3xl p-5 text-white shadow-md transition-all duration-300 hover:shadow-xl active:scale-[0.99] overflow-hidden bg-gradient-to-br from-[#121927] via-[#1a253c] to-[#0e1628] border border-white/10"
               >
-                {/* Realistický jemný svetelný odlesk cez celú kartu */}
                 <div className="pointer-events-none absolute -inset-full bg-gradient-to-tr from-transparent via-white/10 to-transparent rotate-45 transform transition-transform duration-1000 group-hover:translate-x-full" />
 
-                {/* Horný riadok: Typ karty + Bezkontaktný symbol */}
-                <div className="flex items-center justify-between mb-4 relative z-10">
+                <div className="flex items-center justify-between mb-3 relative z-10">
                   <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-bold tracking-tight text-white/95">
+                    <span className="text-[13px] font-bold tracking-tight text-white/95">
                       Virtuálna karta
                     </span>
                     <span className="rounded-full bg-white/15 px-2 py-0.5 text-[10px] font-medium tracking-wide text-white/80">
@@ -617,32 +662,29 @@ function GeorgePrehladModern() {
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-white/70">
-                    <Wifi className="w-5 h-5 rotate-90 stroke-[2.2]" />
+                    <Wifi className="w-4 h-4 rotate-90 stroke-[2.2]" />
                   </div>
                 </div>
 
-                {/* EMV Zlatý čip s mikro-linkami */}
-                <div className="relative z-10 my-2">
-                  <div className="w-10 h-7 rounded-md bg-gradient-to-br from-[#e0b04c] via-[#f7d77c] to-[#b88928] p-0.5 shadow-sm border border-amber-300/40">
-                    <div className="w-full h-full rounded-[3px] border border-black/20 flex flex-col justify-between p-0.5 opacity-90">
-                      <div className="h-[1px] w-full bg-black/30 mt-1"></div>
+                <div className="relative z-10 my-1.5">
+                  <div className="w-9 h-6 rounded bg-gradient-to-br from-[#e0b04c] via-[#f7d77c] to-[#b88928] p-0.5 shadow-sm border border-amber-300/40">
+                    <div className="w-full h-full rounded-[2px] border border-black/20 flex flex-col justify-between p-0.5 opacity-90">
+                      <div className="h-[1px] w-full bg-black/30 mt-0.5"></div>
                       <div className="flex justify-between">
-                        <div className="w-2.5 h-[1px] bg-black/30"></div>
-                        <div className="w-2.5 h-[1px] bg-black/30"></div>
+                        <div className="w-2 h-[1px] bg-black/30"></div>
+                        <div className="w-2 h-[1px] bg-black/30"></div>
                       </div>
-                      <div className="h-[1px] w-full bg-black/30 mb-1"></div>
+                      <div className="h-[1px] w-full bg-black/30 mb-0.5"></div>
                     </div>
                   </div>
                 </div>
 
-                {/* Číslo karty (embosovaný štýl) */}
-                <div className="relative z-10 mt-3 mb-4">
-                  <div className="font-mono text-[17px] tracking-[0.22em] text-white/95 drop-shadow-sm font-medium">
+                <div className="relative z-10 mt-2.5 mb-3">
+                  <div className="font-mono text-[16px] tracking-[0.2em] text-white/95 drop-shadow-sm font-medium">
                     •••• •••• •••• {cardLastFour}
                   </div>
                 </div>
 
-                {/* Spodný riadok: Držiteľ + Platnosť + Logo VISA */}
                 <div className="flex items-end justify-between relative z-10 pt-1">
                   <div>
                     <p className="text-[9px] uppercase tracking-wider text-white/50">Držiteľ karty</p>
@@ -656,9 +698,8 @@ function GeorgePrehladModern() {
                     <p className="text-[11px] font-mono text-white/80 mt-0.5">10/31</p>
                   </div>
 
-                  {/* Logo Mastercard */}
                   <div className="pl-2">
-                    <svg className="h-7 w-auto" viewBox="0 0 48 30" aria-label="Mastercard">
+                    <svg className="h-6 w-auto" viewBox="0 0 48 30" aria-label="Mastercard">
                       <circle cx="17" cy="15" r="13" fill="#eb001b" />
                       <circle cx="31" cy="15" r="13" fill="#f79e1b" />
                       <path d="M24 4.2a13 13 0 0 1 0 21.6a13 13 0 0 1 0-21.6z" fill="#ff5f00" />
@@ -669,39 +710,53 @@ function GeorgePrehladModern() {
             </div>
 
             {/* Karta: Investície a sporenie */}
-            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#2d2a8f]" />
-              <div className="flex justify-between items-start mt-1">
+            <div className="rounded-3xl p-5 mb-4 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
+              <div className="absolute top-0 left-0 w-full h-1 bg-[#2d2a8f]" />
+              <div className="flex justify-between items-start mt-0.5">
                 <div>
-                  <h3 className="text-[19px] font-semibold text-[#1b2a4a] dark:text-white">Investície</h3>
-                  <div className="text-[32px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1">
+                  <h3 className="text-[16px] font-semibold text-[#1b2a4a] dark:text-white">Investície</h3>
+                  <div className="text-[25px] font-bold flex items-baseline tracking-tight text-[#1b2a4a] dark:text-white mt-1">
                     <span>{hidden ? "••••" : savParts.whole}</span>
                     <span>,</span>
-                    <sup className="text-[15px] font-bold top-[-0.7em] ml-0.5 leading-none">{hidden ? "••" : savParts.cents}</sup>
+                    <sup className="text-[13px] font-bold top-[-0.55em] ml-0.5 leading-none">{hidden ? "••" : savParts.cents}</sup>
                     <span className="ml-1">€</span>
                   </div>
                 </div>
-                <img src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=160&auto=format&fit=crop&q=80" alt="" className="w-14 h-14 rounded-full object-cover" />
+                <img
+                  src="https://images.unsplash.com/photo-1486325212027-8081e485255e?w=160&auto=format&fit=crop&q=80"
+                  alt=""
+                  className="w-13 h-13 rounded-full object-cover"
+                />
               </div>
-              <Link to="/sporenie" className="mt-4 px-5 py-2.5 rounded-full font-semibold text-[15px] inline-block bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]">
+              <Link
+                to="/sporenie"
+                className="mt-4 px-5 py-2 rounded-full font-medium text-[13px] inline-block bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]"
+              >
                 Vyhľadať a kúpiť
               </Link>
             </div>
 
             {/* Karta: Moneyback */}
-            <div className="rounded-3xl p-5 mb-5 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-[#a94fb5]" />
-              <div className="flex justify-between items-start mt-1">
+            <div className="rounded-3xl p-5 mb-4 relative overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm">
+              <div className="absolute top-0 left-0 w-full h-1 bg-[#a94fb5]" />
+              <div className="flex justify-between items-start mt-0.5">
                 <div className="pr-3">
-                  <h3 className="text-[19px] font-semibold text-[#1b2a4a] dark:text-white">Moneyback</h3>
-                  <span className="mt-1 inline-block rounded-full bg-[#eef3ff] dark:bg-[#242b3b] px-2.5 py-0.5 text-[12px] font-semibold text-[#196ee6] dark:text-[#4f95ff]">7 nových ponúk</span>
-                  <p className="mt-2 text-[15px] text-gray-500 dark:text-gray-400">Objavte ponuky od najlepších značiek a získajte späť časť svojich peňazí.</p>
+                  <h3 className="text-[16px] font-semibold text-[#1b2a4a] dark:text-white">Moneyback</h3>
+                  <span className="mt-1.5 inline-block rounded-full bg-[#fbeefc] dark:bg-[#3a2340] px-2.5 py-0.5 text-[11px] font-semibold text-[#a94fb5]">
+                    7 nových ponúk
+                  </span>
+                  <p className="mt-2 text-[13px] text-gray-500 dark:text-gray-400 leading-normal">
+                    Objavte ponuky od najlepších značiek a získajte späť časť svojich peňazí.
+                  </p>
                 </div>
-                <div className="w-14 h-14 shrink-0 rounded-full flex items-center justify-center bg-[#fbeefc] dark:bg-[#3a2340] text-[#a94fb5]">
-                  <ShoppingBag size={24} />
+                <div className="w-13 h-13 shrink-0 rounded-full flex items-center justify-center bg-[#fbeefc] dark:bg-[#3a2340] text-[#a94fb5]">
+                  <ShoppingBag size={22} />
                 </div>
               </div>
-              <button type="button" className="mt-4 px-5 py-2.5 rounded-full font-semibold text-[15px] bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]">
+              <button
+                type="button"
+                className="mt-4 px-5 py-2 rounded-full font-medium text-[13px] bg-[#eef3ff] dark:bg-[#242b3b] text-[#196ee6] dark:text-[#4f95ff]"
+              >
                 Prezrite si 7 nových ponúk
               </button>
             </div>
@@ -709,12 +764,12 @@ function GeorgePrehladModern() {
             {/* Sekcia: Posledné pohyby */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-[16px] font-bold text-gray-900 dark:text-white">
+                <h2 className="text-[15px] font-bold text-gray-900 dark:text-white">
                   Posledné pohyby
                 </h2>
                 <Link
                   to="/platby"
-                  className="text-[13px] font-semibold hover:underline text-[#196ee6] dark:text-[#4f95ff]"
+                  className="text-[12px] font-semibold hover:underline text-[#196ee6] dark:text-[#4f95ff]"
                 >
                   Zobraziť všetky
                 </Link>
@@ -722,7 +777,7 @@ function GeorgePrehladModern() {
 
               <div className="rounded-3xl divide-y overflow-hidden bg-white dark:bg-[#1c1c24] shadow-sm border border-gray-100 dark:border-white/5 divide-gray-100 dark:divide-white/5 text-gray-900 dark:text-white">
                 {recentTransactions.length === 0 ? (
-                  <p className="p-4 text-center text-sm text-gray-400">
+                  <p className="p-4 text-center text-[13px] text-gray-400">
                     Žiadne nedávne transakcie
                   </p>
                 ) : (
@@ -739,17 +794,17 @@ function GeorgePrehladModern() {
                         <div className="flex items-center gap-3 min-w-0 pr-2">
                           <MerchantLogo counterparty={tx.counterparty} category={tx.category} />
                           <div className="min-w-0">
-                            <p className="text-[14px] font-bold truncate text-gray-900 dark:text-white">
+                            <p className="text-[13px] font-bold truncate text-gray-900 dark:text-white">
                               {tx.counterparty || "Platba"}
                             </p>
-                            <p className="text-[12px] text-gray-500 dark:text-gray-400">
+                            <p className="text-[11px] text-gray-500 dark:text-gray-400">
                               {formatDate(tx.date)} • {tx.category}
                             </p>
                           </div>
                         </div>
 
                         <span
-                          className={`text-[15px] font-bold flex items-baseline shrink-0 tracking-tight ${
+                          className={`text-[14px] font-bold flex items-baseline shrink-0 tracking-tight ${
                             isIncome
                               ? "text-[#16a34a] dark:text-[#30d158]"
                               : "text-gray-900 dark:text-white"
@@ -761,7 +816,7 @@ function GeorgePrehladModern() {
                           <sup className="text-[10px] font-semibold top-[-0.4em] ml-0.5 leading-none select-none">
                             {txParts.cents}
                           </sup>
-                          <span className="ml-1 text-[13px] font-normal select-none">€</span>
+                          <span className="ml-1 text-[12px] font-normal select-none">€</span>
                         </span>
                       </Link>
                     );
@@ -772,7 +827,6 @@ function GeorgePrehladModern() {
           </main>
         </>
       )}
-
     </div>
   );
 }
