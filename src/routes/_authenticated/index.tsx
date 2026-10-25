@@ -313,10 +313,10 @@ export function GeorgePrehladModern() {
     });
   }
 
-  const totals = monthTotals(s.transactions);
-  const total = balance(s.transactions);
+  const totals = monthTotals(s);
+  const total = balance(s);
   const totalParts = splitAmount(total);
-  const expParts = splitAmount(totals.expenses);
+  const expParts = splitAmount(totals.expense);
   const incParts = splitAmount(totals.income);
   const savParts = splitAmount(s.savingsBalance ?? 0);
 
