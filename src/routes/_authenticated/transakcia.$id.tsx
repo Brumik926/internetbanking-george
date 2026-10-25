@@ -34,8 +34,8 @@ function formatDay(iso: string) {
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <dt className="text-[14px] text-detail-muted">{label}</dt>
-      <dd className="mt-1 break-words text-[18px] leading-snug">{children}</dd>
+      <dt className="text-[15px] text-detail-muted">{label}</dt>
+      <dd className="mt-1 break-words text-[19px] font-semibold leading-snug text-detail-ink">{children}</dd>
     </div>
   );
 }
@@ -109,9 +109,9 @@ function Detail() {
           <section className="rounded-3xl bg-detail-surface p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <h1 className="break-words text-[20px] font-semibold leading-snug">{t.counterparty}</h1>
-                <p className="mt-1 text-[32px] font-bold leading-tight" aria-label={`${income ? "+" : "-"}${formatEur(t.amount)}`}>
-                  {income ? "+" : "-"}{Number(whole).toLocaleString("sk-SK")},<sup className="text-[17px] font-semibold">{cents}</sup> €
+                <h1 className="break-words text-[18px] font-semibold leading-snug text-detail-ink">{t.counterparty}</h1>
+                <p className="mt-1 text-[30px] font-bold leading-tight text-detail-ink" aria-label={`${income ? "+" : "-"}${formatEur(t.amount)}`}>
+                  {income ? "+" : "-"}{Number(whole).toLocaleString("sk-SK")},<sup className="text-[16px] font-semibold">{cents}</sup> €
                 </p>
               </div>
               <span className="grid size-16 shrink-0 place-items-center rounded-full bg-detail-direction">
@@ -138,7 +138,7 @@ function Detail() {
             </div>
             <div className="mt-1 flex items-center gap-5 bg-detail-surface px-5 py-5">
               <EyeOff className="size-7 shrink-0 text-detail-action" />
-              <span className="flex-1 text-[17px] leading-snug">Nezahrnúť do prehľadu príjmov a výdavkov</span>
+              <span className="flex-1 text-[17px] leading-snug text-detail-ink">Nezahrnúť do prehľadu príjmov a výdavkov</span>
               <button
                 role="switch"
                 aria-checked={!!extra.exclude}
@@ -167,12 +167,12 @@ function Detail() {
             ) : (
               <button className={rowBtn} onClick={() => { setNoteDraft(note ?? ""); setEditingNote(true); }}>
                 <Pencil className="size-7 shrink-0 text-detail-action" />
-                <span className={`text-[18px] ${note ? "" : "text-detail-muted"}`}>{note || "Pridať poznámku alebo #hashtag"}</span>
+                <span className={`text-[17px] ${note ? "text-detail-ink" : "text-detail-muted"}`}>{note || "Pridať poznámku alebo #hashtag"}</span>
               </button>
             )}
             <button className={`${rowBtn} mt-1`} onClick={() => fileRef.current?.click()}>
               <Paperclip className="size-7 shrink-0 text-detail-action" />
-              <span className={`min-w-0 flex-1 truncate text-[18px] ${extra.attachment ? "" : "text-detail-muted"}`}>{extra.attachment || "Nahrať prílohu"}</span>
+              <span className={`min-w-0 flex-1 truncate text-[17px] ${extra.attachment ? "text-detail-ink" : "text-detail-muted"}`}>{extra.attachment || "Nahrať prílohu"}</span>
               {extra.attachment && (
                 <span role="button" aria-label="Odstrániť prílohu" onClick={(e) => { e.stopPropagation(); save({ ...extra, attachment: undefined }); }}>
                   <X className="size-5 text-detail-muted" />
