@@ -611,11 +611,8 @@ export function GeorgePrehladModern() {
                     </p>
                   </div>
                   <img
-                    src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?w=160&auto=format&fit=crop&q=80"
-                    alt=""
-                    className="w-13 h-13 rounded-full object-cover shrink-0"
-                  />
-                </div>
+                    <SlspLogo size={52} />
+               </div>
               </Link>
 
               <div className="flex justify-between items-center mt-4">
