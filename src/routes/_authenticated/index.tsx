@@ -610,7 +610,6 @@ export function GeorgePrehladModern() {
                       {hidden ? "•••• € vlastné zdroje" : `${formatEur(total)} vlastné zdroje`}
                     </p>
                   </div>
-                  <img
                     <SlspLogo size={52} />
                </div>
               </Link>
