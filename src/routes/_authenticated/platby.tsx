@@ -525,7 +525,6 @@ export default function UcetDetail() {
                 </p>
               </div>
               <SlspLogo size={56} />
-              </div>
             </div>
           </div>
 
