@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { 
   ArrowLeft, 
   Search, 
@@ -48,7 +49,6 @@ function splitAmount(val: number) {
 function getInitials(name?: string | null): string {
   if (!name) return "??";
   
-  // Odstránenie špeciálnych znakov a symbolov
   const cleaned = name
     .replace(/[·•\-–—_/\\()[\],.:;!?@#$%^&*+='"`]/g, " ")
     .trim();
@@ -64,7 +64,6 @@ function getInitials(name?: string | null): string {
       : single.toUpperCase();
   }
   
-  // Prvé písmeno z prvého a posledného relevantného slova
   const first = words[0]![0] || "";
   const last = words[words.length - 1]![0] || "";
   const result = (first + last).toUpperCase();
@@ -620,7 +619,7 @@ export default function UcetDetail() {
 
               {/* Transakcie zoskupené po mesiacoch */}
               {groupedTransactions.length === 0 ? (
-                <div className="rounded-3xl bg-detail-surface p-8 text-center text-detail-muted ">
+                <div className="rounded-3xl bg-detail-surface p-8 text-center text-detail-muted">
                   {searchQuery ? "Nenašli sa žiadne vyhovujúce transakcie." : "Zatiaľ žiadne zaznamenané transakcie."}
                 </div>
               ) : (
@@ -638,7 +637,7 @@ export default function UcetDetail() {
                           <div
                             key={t.id}
                             onClick={() => navigate({ to: "/transakcia/$id", params: { id: t.id } })}
-                            className="cursor-pointer flex items-center justify-between rounded-3xl bg-detail-surface p-4  active:opacity-80 transition"
+                            className="cursor-pointer flex items-center justify-between rounded-3xl bg-detail-surface p-4 active:opacity-80 transition"
                           >
                             {/* Vľavo: Logo obchodníka alebo iniciály */}
                             <div className="flex items-center gap-3 min-w-0 pr-2">
@@ -748,7 +747,7 @@ export default function UcetDetail() {
 
           {/* Obsah záložky Karty */}
           {activeTab === "karty" && (
-            <div className="rounded-3xl bg-detail-surface p-5 ">
+            <div className="rounded-3xl bg-detail-surface p-5">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[13px] text-detail-muted">Virtuálna karta</p>
@@ -761,7 +760,7 @@ export default function UcetDetail() {
 
           {/* Obsah záložky Info */}
           {activeTab === "info" && (
-            <div className="rounded-3xl bg-detail-surface p-5  space-y-4">
+            <div className="rounded-3xl bg-detail-surface p-5 space-y-4">
               <div>
                 <p className="text-[12px] text-detail-muted">Majiteľ účtu</p>
                 <p className="text-[15px] font-medium text-foreground">{s.owner || "Tomáš Lizák"}</p>
@@ -788,50 +787,54 @@ export default function UcetDetail() {
           )}
         </div>
 
-        {/* Plávajúci oválny panel (Floating Bottom Action Bar) */}
-        <div className="fixed inset-x-0 bottom-5 z-50 mx-auto w-full max-w-[420px] px-4 pointer-events-none">
-          <div className="pointer-events-auto flex items-center justify-between gap-2.5 rounded-full bg-detail-surface/95 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)] border border-detail-action-surface backdrop-blur-xl">
-            {/* Dve kruhové tlačidlá: Lupa/Vyhľadávanie a Štatistiky/Grafy */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSearching((prev) => !prev);
-                  if (searchQuery) setSearchQuery("");
-                }}
-                className={`flex w-12 h-12 items-center justify-center rounded-full transition active:scale-95 ${
-                  isSearching
-                    ? "bg-[#196ee6] text-white shadow-md shadow-[#196ee6]/30"
-                    : "bg-detail-action-surface text-detail-action hover:opacity-85"
-                }`}
-                aria-label="Vyhľadať v transakciách"
-                title="Vyhľadať transakcie"
-              >
-                <Search className="w-5 h-5 stroke-[2.2]" />
-              </button>
+        {/* Plávajúci oválny panel (Floating Bottom Action Bar pripnutý priamo do body cez Portal) */}
+        {typeof document !== "undefined" &&
+          createPortal(
+            <div className="fixed inset-x-0 bottom-5 z-50 mx-auto w-full max-w-[420px] px-4 pointer-events-none">
+              <div className="pointer-events-auto flex items-center justify-between gap-2.5 rounded-full bg-detail-surface/95 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.6)] border border-detail-action-surface backdrop-blur-xl">
+                {/* Dve kruhové tlačidlá: Lupa/Vyhľadávanie a Štatistiky/Grafy */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSearching((prev) => !prev);
+                      if (searchQuery) setSearchQuery("");
+                    }}
+                    className={`flex w-12 h-12 items-center justify-center rounded-full transition active:scale-95 ${
+                      isSearching
+                        ? "bg-[#196ee6] text-white shadow-md shadow-[#196ee6]/30"
+                        : "bg-detail-action-surface text-detail-action hover:opacity-85"
+                    }`}
+                    aria-label="Vyhľadať v transakciách"
+                    title="Vyhľadať transakcie"
+                  >
+                    <Search className="w-5 h-5 stroke-[2.2]" />
+                  </button>
 
-              <Link
-                to="/rozpocet"
-                className="flex w-12 h-12 items-center justify-center rounded-full bg-detail-action-surface text-detail-action hover:opacity-85 transition active:scale-95"
-                aria-label="Prehľad výdavkov a štatistika"
-                title="Štatistiky a grafy výdavkov"
-              >
-                <BarChart2 className="w-5 h-5 stroke-[2.2]" />
-              </Link>
-            </div>
+                  <Link
+                    to="/rozpocet"
+                    className="flex w-12 h-12 items-center justify-center rounded-full bg-detail-action-surface text-detail-action hover:opacity-85 transition active:scale-95"
+                    aria-label="Prehľad výdavkov a štatistika"
+                    title="Štatistiky a grafy výdavkov"
+                  >
+                    <BarChart2 className="w-5 h-5 stroke-[2.2]" />
+                  </Link>
+                </div>
 
-            {/* Veľké modré tlačidlo "Nová platba" s ikonou + */}
-            <Link
-              to="/nova-platba"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#196ee6] hover:bg-[#155fc7] dark:bg-[#2a5ee8] dark:hover:bg-[#196ee6] px-5 py-3 text-[15px] font-bold text-white shadow-md shadow-[#196ee6]/25 transition active:scale-95 whitespace-nowrap"
-            >
-              <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20">
-                <Plus className="w-4 h-4 stroke-[3]" />
+                {/* Veľké modré tlačidlo "Nová platba" s ikonou + */}
+                <Link
+                  to="/nova-platba"
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#196ee6] hover:bg-[#155fc7] dark:bg-[#2a5ee8] dark:hover:bg-[#196ee6] px-5 py-3 text-[15px] font-bold text-white shadow-md shadow-[#196ee6]/25 transition active:scale-95 whitespace-nowrap"
+                >
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/20">
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                  </div>
+                  <span>Nová platba</span>
+                </Link>
               </div>
-              <span>Nová platba</span>
-            </Link>
-          </div>
-        </div>
+            </div>,
+            document.body,
+          )}
 
       </div>
     </AppShell>
