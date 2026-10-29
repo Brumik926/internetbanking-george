@@ -21,7 +21,6 @@ export const Route = createFileRoute("/_authenticated/centrum-platieb")({
 });
 
 type Template = { id: string; title: string; name: string; iban: string; amount: string; vs?: string | undefined };
-const KEY = "george-payment-templates";
 
 const field =
   "w-full rounded-2xl border border-border bg-surface-2 px-4 py-3 text-[15px] outline-none placeholder:text-muted-foreground focus:border-primary";
@@ -59,7 +58,6 @@ function CentrumPlatieb() {
     for (const a of added)
       await supabase.from("payment_templates").insert({ id: a.id, title: a.title, name: a.name, iban: a.iban, amount: Number(a.amount), vs: a.vs ?? null });
   };
-  void KEY;
 
   const recipients = useMemo(() => {
     const map = new Map<string, { name: string; iban: string; amount: number; count: number }>();
@@ -106,6 +104,7 @@ function CentrumPlatieb() {
 
       <div className="-mt-12 space-y-4 px-4 pb-6">
         <input
+          aria-label="Hľadať v šablónach a príjemcoch"
           className={field + " bg-surface"}
           placeholder="Hľadať podľa mena alebo IBAN"
           value={q}
