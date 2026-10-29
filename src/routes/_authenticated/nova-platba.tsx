@@ -28,7 +28,11 @@ export const Route = createFileRoute("/_authenticated/nova-platba")({
   head: () => ({
     meta: [
       { title: "Nová platba | George" },
-      { name: "description", content: "Zadajte prevod so skenovaním a overením v George." },
+      { name: "description", content: "Zadajte SEPA prevod so skenovaním QR kódov a bezpečným overením v George." },
+      { property: "og:title", content: "Nová platba | George" },
+      { property: "og:description", content: "Zadajte SEPA prevod so skenovaním QR kódov a bezpečným overením v George." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   validateSearch: (search: Record<string, unknown>): { name?: string | undefined; iban?: string | undefined; amount?: string | undefined; vs?: string | undefined } => ({
@@ -78,7 +82,6 @@ export default function NovaPlatba() {
 
   const value = Number(amount.replace(",", "."));
 
-  // 1. Validácia formulára pred autorizáciou
   function handleInitiatePayment(e: React.FormEvent) {
     e.preventDefault();
     setError("");
@@ -99,7 +102,6 @@ export default function NovaPlatba() {
     setShowConfirmModal(true);
   }
 
-  // 2. Vykonanie uloženia transakcie
   async function executePayment() {
     setBusy(true);
     try {
@@ -126,7 +128,6 @@ export default function NovaPlatba() {
     }
   }
 
-  // 3. Potvrdenie biometriou
   async function confirmWithBiometrics() {
     setBusy(true);
     setPinError("");
@@ -144,7 +145,6 @@ export default function NovaPlatba() {
     }
   }
 
-  // 4. Potvrdenie PIN kódom (fallback)
   async function confirmWithPin(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (pin.trim().length < 4) {
@@ -194,7 +194,6 @@ export default function NovaPlatba() {
           }}
         />
 
-        {/* Formulár platby */}
         <form onSubmit={handleInitiatePayment} className="space-y-3">
           <div className="space-y-3 rounded-3xl bg-surface p-4 shadow-sm">
             <label className="block">
@@ -289,7 +288,6 @@ export default function NovaPlatba() {
         </form>
       </div>
 
-      {/* Skener QR kódov */}
       <QrScannerModal
         open={scannerOpen}
         onClose={() => setScannerOpen(false)}
@@ -302,7 +300,6 @@ export default function NovaPlatba() {
         }}
       />
 
-      {/* Rekapitulácia a potvrdenie */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-4 backdrop-blur-sm sm:items-center">
           <div className="w-full max-w-[400px] rounded-3xl bg-surface p-6 shadow-2xl">
@@ -310,7 +307,7 @@ export default function NovaPlatba() {
               <div className="mx-auto grid size-14 place-items-center rounded-full bg-primary/15 text-primary">
                 {authMethod === "bio" ? <Fingerprint className="size-8" /> : <KeyRound className="size-8" />}
               </div>
-              <h3 className="mt-3 text-[18px] font-bold">Potvrdenie platby</h3>
+              <h2 className="mt-3 text-[18px] font-bold">Potvrdenie platby</h2>
               <p className="mt-1 text-[13px] text-muted-foreground">
                 Skontrolujte detaily platby a autorizujte prevod.
               </p>
@@ -560,7 +557,7 @@ function QrScannerModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
       <div className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-surface p-5 shadow-2xl">
         <div className="flex items-center justify-between pb-3">
-          <h3 className="font-bold text-foreground">Skenovať faktúru / QR</h3>
+          <h2 className="font-bold text-foreground">Skenovať faktúru / QR</h2>
           <button
             type="button"
             onClick={() => {
