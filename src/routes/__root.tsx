@@ -1,5 +1,4 @@
 import { createRootRouteWithContext, Outlet, ScrollRestoration } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/router-devtools";
 import { Toaster } from "@/components/ui/sonner";
 
 interface MyRouterContext {
@@ -40,8 +39,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       { name: "theme-color", content: "#0f172a" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "default" },
-      // Google Search Console (voliteľné overenie)
-      { name: "google-site-verification", content: "doplňte-váš-overovací-kód-ak-máte" },
     ],
     links: [
       { rel: "icon", href: "/favicon.ico" },
@@ -58,9 +55,6 @@ function RootComponent() {
       <Outlet />
       <Toaster position="top-right" richColors />
       <ScrollRestoration />
-      {process.env.NODE_ENV === "development" && (
-        <TanStackRouterDevtools position="bottom-right" />
-      )}
     </>
   );
 }
