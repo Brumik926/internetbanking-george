@@ -8,14 +8,16 @@ import { CATEGORIES, formatEur, MONTHS, removeBudget, setBudget, useBank } from 
 import { budgetSummary } from "@/lib/budget-summary";
 
 export const Route = createFileRoute("/_authenticated/rozpocet")({
-  head: () => ({ meta: [
-    { title: "FIT · Mesačný rozpočet | George" },
-    { name: "description", content: "Mesačný FIT prehľad príjmov, výdavkov a rozpočtu podľa kategórií." },
-    { property: "og:title", content: "FIT · Mesačný rozpočet | George" },
-    { property: "og:description", content: "Vaše výdavky, príjmy a mesačné limity na jednom mieste." },
-    { property: "og:type", content: "website" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+  head: () => ({
+    meta: [
+      { title: "Mesačný rozpočet (FIT) | George" },
+      { name: "description", content: "Mesačný FIT prehľad príjmov, výdavkov a rozpočtu podľa kategórií." },
+      { property: "og:title", content: "Mesačný rozpočet (FIT) | George" },
+      { property: "og:description", content: "Vaše výdavky, príjmy a mesačné limity na jednom mieste." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Rozpocet,
 });
 
@@ -55,8 +57,8 @@ function Rozpocet() {
       <div className="transaction-detail min-h-screen bg-detail-background pb-6 text-foreground">
         <header className="brand-header px-5 pb-6 pt-7 text-brand-foreground">
           <div className="flex items-center justify-between"><Rss className="size-7" strokeWidth={1.8} /><span className="text-sm font-semibold">Finančný prehľad</span></div>
-          <h1 className="mt-5 text-[34px] font-bold leading-none">FIT</h1>
-          <p className="mt-2 text-sm">Rozpočet</p>
+          <h1 className="mt-5 text-[28px] font-bold leading-tight">Mesačný rozpočet (FIT)</h1>
+          <p className="mt-1 text-sm opacity-90">Prehľad výdavkov a limitov</p>
         </header>
         <div className="flex h-16 items-center justify-between px-4">
           <Button variant="ghost" size="icon" aria-label="Predchádzajúci mesiac" onClick={() => shiftMonth(-1)} className="text-detail-action"><ChevronLeft /></Button>
