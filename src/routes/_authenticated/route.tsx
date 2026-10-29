@@ -150,12 +150,17 @@ function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
 
   return (
+    function AuthenticatedLayout() {
+  const { user } = Route.useRouteContext();
+
+  return (
     <AuthenticatedErrorBoundary>
       <BiometricLock userId={user.id}>
         <BankDataGate>
           <div className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-28">
             <SwipeNav><Outlet /></SwipeNav>
             <PersistentBottomNav />
+            <SessionTimeoutWarning />
           </div>
         </BankDataGate>
       </BiometricLock>
