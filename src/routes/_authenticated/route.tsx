@@ -150,10 +150,6 @@ function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
 
   return (
-    function AuthenticatedLayout() {
-  const { user } = Route.useRouteContext();
-
-  return (
     <AuthenticatedErrorBoundary>
       <BiometricLock userId={user.id}>
         <BankDataGate>
