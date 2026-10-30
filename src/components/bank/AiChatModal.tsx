@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Sparkles, X, Send, Bot, Loader2, AlertCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,6 +17,7 @@ const QUICK_PROMPTS = [
 
 export function AiChatButton() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -26,6 +28,10 @@ export function AiChatButton() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Automatický scroll na spodok pri novej správe
   useEffect(() => {
@@ -44,7 +50,6 @@ export function AiChatButton() {
     setLoading(true);
 
     try {
-      // Volanie Supabase Edge Funkcie claude-assistant s telom { prompt: message }
       const { data, error } = await supabase.functions.invoke("claude-assistant", {
         body: { prompt: message },
       });
@@ -53,7 +58,6 @@ export function AiChatButton() {
         throw new Error(error.message || "Nepodarilo sa spojiť s Edge funkciou.");
       }
 
-      // Anthropic Claude odpoveď vracia štruktúru: { content: [{ type: "text", text: "..." }] }
       const claudeText =
         data?.content?.[0]?.text ||
         data?.reply ||
@@ -77,18 +81,26 @@ export function AiChatButton() {
     }
   };
 
-  return (
-    <>
-      {/* Plávajúce tlačidlo George AI (vpravo dole) */}
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#196ee6] text-white shadow-xl hover:scale-105 active:scale-95 transition-transform"
-        aria-label="Otvoriť George AI asistenta"
-      >
-        <Sparkles className="h-6 w-6" />
-      </button>
+  if (!mounted || typeof document === "undefined") {
+    return null;
+  }
 
-      {/* Dialógové okno chatu */}
+  return createPortal(
+    <>
+      {/* Fixne ukotvené plávajúce tlačidlo George AI nad spodnou lištou */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-[430px]">
+        <div className="relative h-0">
+          <button
+            onClick={() => setOpen(true)}
+            className="pointer-events-auto absolute bottom-[max(5.5rem,calc(env(safe-area-inset-bottom)+4.5rem))] right-4 flex h-13 w-13 items-center justify-center rounded-full bg-[#196ee6] text-white shadow-2xl hover:scale-105 active:scale-95 transition-all focus:outline-none"
+            aria-label="Otvoriť George AI asistenta"
+          >
+            <Sparkles className="h-6 w-6" />
+          </button>
+        </div>
+      </div>
+
+      {/* Okno chatu */}
       {open && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center p-0 sm:p-4 animate-in fade-in duration-200">
           <div className="flex h-[85vh] w-full max-w-[440px] flex-col rounded-t-3xl bg-background p-4 shadow-2xl border border-border sm:rounded-3xl">
@@ -192,6 +204,7 @@ export function AiChatButton() {
           </div>
         </div>
       )}
-    </>
+    </>,
+    document.body,
   );
 }
