@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Sparkles, X, Send, Bot, Loader2, AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { askClaude } from "@/lib/claude.functions";
 
 interface Message {
   role: "user" | "assistant";
@@ -33,7 +33,6 @@ export function AiChatButton() {
     setMounted(true);
   }, []);
 
-  // Automatický scroll na spodok pri novej správe
   useEffect(() => {
     if (open) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -50,19 +49,10 @@ export function AiChatButton() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("claude-assistant", {
-        body: { prompt: message },
-      });
-
-      if (error) {
-        throw new Error(error.message || "Nepodarilo sa spojiť s Edge funkciou.");
-      }
+      const data = await askClaude({ data: { prompt: message } });
 
       const claudeText =
         data?.content?.[0]?.text ||
-        data?.reply ||
-        (data?.error?.message ? `Chyba: ${data.error.message}` : null) ||
-        (typeof data === "string" ? data : null) ||
         "Claude nevrátil žiadnu textovú odpoveď.";
 
       setMessages((prev) => [...prev, { role: "assistant", text: claudeText }]);
@@ -73,7 +63,7 @@ export function AiChatButton() {
         ...prev,
         {
           role: "assistant",
-          text: "Momentálne sa mi nepodarilo získať odpoveď. Skontrolujte prosím, či je v nastaveniach funkcie nastavený tajný kľúč ANTHROPIC_API_KEY.",
+          text: `Ospravedlňujem sa, nepodarilo sa získať odpoveď: ${msg}`,
         },
       ]);
     } finally {
@@ -112,7 +102,7 @@ export function AiChatButton() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm leading-tight">George AI Asistent</h3>
-                  <p className="text-[11px] text-muted-foreground">Claude 3.5 Sonnet • Edge Funkcia</p>
+                  <p className="text-[11px] text-muted-foreground">Claude 3.5 Sonnet • Zabudovaná AI brána</p>
                 </div>
               </div>
               <button
