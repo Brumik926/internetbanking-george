@@ -3,6 +3,7 @@ import { createFileRoute, isRedirect, Link, Outlet, redirect } from "@tanstack/r
 import { Component, type ErrorInfo, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PersistentBottomNav } from "@/components/bank/AppShell";
+import { AiChatButton } from "@/components/bank/AiChatModal";
 import { SwipeNav } from "@/components/bank/SwipeNav";
 import { BiometricLock } from "@/components/bank/BiometricLock";
 import { Button } from "@/components/ui/button";
@@ -153,8 +154,9 @@ function AuthenticatedLayout() {
     <AuthenticatedErrorBoundary>
       <BiometricLock userId={user.id}>
         <BankDataGate>
-          <div className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-28">
+          <div className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-28 relative">
             <SwipeNav><Outlet /></SwipeNav>
+            <AiChatButton />
             <PersistentBottomNav />
             <SessionTimeoutWarning />
           </div>
