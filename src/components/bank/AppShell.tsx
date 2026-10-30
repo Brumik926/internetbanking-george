@@ -11,7 +11,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     </div>
   );
 }
-
+export function AppShell({ children }: { children: ReactNode }) {
+  return (
+    <div className="mx-auto min-h-screen w-full max-w-[430px] bg-background text-foreground pb-24 font-sans relative">
+      {children}
+      <AiChatButton />
+    </div>
+  );
+}
 export function PersistentBottomNav() {
   const path = useRouterState({ select: (s) => s.location.pathname });
 
