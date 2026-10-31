@@ -1,4 +1,5 @@
 import { validateIban, formatIban } from "@/lib/iban-validator";
+import { verifyUserPin } from "@/lib/pin-service";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -87,8 +88,7 @@ export default function NovaPlatba() {
     e.preventDefault();
     setError("");
     setPin("");
-    setPinError("");
-
+    setPinError("") 
     if (!name.trim()) return setError("Zadajte meno príjemcu.");
     if (!Number.isFinite(value) || value <= 0) return setError("Zadajte platnú sumu.");
     if (value > balance(s)) return setError("Nedostatočný zostatok na účte.");
@@ -148,13 +148,31 @@ if (!ibanCheck.valid) {
       setBusy(false);
     }
   }
-
   async function confirmWithPin(e?: React.FormEvent) {
     if (e) e.preventDefault();
-    if (pin.trim().length < 4) {
-      setPinError("Zadajte minimálne 4-miestny George PIN kód.");
+    setPinError("");
+
+    if (!pin.trim()) {
+      setPinError("Zadajte George PIN kód.");
       return;
     }
+
+    setBusy(true);
+    try {
+      const check = await verifyUserPin(user.id, pin);
+      if (!check.valid) {
+        setPinError(check.error ?? "Nesprávny PIN kód.");
+        setBusy(false);
+        return;
+      }
+
+      await executePayment();
+    } catch (err) {
+      console.error(err);
+      setPinError("Pri overovaní PIN došlo k chybe.");
+      setBusy(false);
+    }
+  }
     await executePayment();
   }
 
