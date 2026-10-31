@@ -88,15 +88,17 @@ export default function NovaPlatba() {
     e.preventDefault();
     setError("");
     setPin("");
-    setPinError("") 
+    setPinError("");
+
     if (!name.trim()) return setError("Zadajte meno príjemcu.");
     if (!Number.isFinite(value) || value <= 0) return setError("Zadajte platnú sumu.");
     if (value > balance(s)) return setError("Nedostatočný zostatok na účte.");
 
     const ibanCheck = validateIban(iban);
-if (!ibanCheck.valid) {
-  return setError(ibanCheck.error ?? "Neplatný IBAN príjemcu.");
-}
+    if (!ibanCheck.valid) {
+      return setError(ibanCheck.error ?? "Neplatný IBAN príjemcu.");
+    }
+
     const savedBioPay = window.localStorage.getItem(`george-bio-pay:${user.id}`) !== "false";
     const hasBio = isBiometricEnabled(user.id);
     const canUseBio = bioSupported && savedBioPay && hasBio;
@@ -148,6 +150,7 @@ if (!ibanCheck.valid) {
       setBusy(false);
     }
   }
+
   async function confirmWithPin(e?: React.FormEvent) {
     if (e) e.preventDefault();
     setPinError("");
@@ -172,8 +175,6 @@ if (!ibanCheck.valid) {
       setPinError("Pri overovaní PIN došlo k chybe.");
       setBusy(false);
     }
-  }
-    await executePayment();
   }
 
   return (
