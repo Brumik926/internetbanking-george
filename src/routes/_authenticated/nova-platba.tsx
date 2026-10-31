@@ -89,7 +89,7 @@ export default function NovaPlatba() {
     setPin("");
     setPinError("");
 
-    if (!name.trim()) return setError("Zadajte meno príjemcu.");a
+    if (!name.trim()) return setError("Zadajte meno príjemcu.");
     if (!Number.isFinite(value) || value <= 0) return setError("Zadajte platnú sumu.");
     if (value > balance(s)) return setError("Nedostatočný zostatok na účte.");
 
