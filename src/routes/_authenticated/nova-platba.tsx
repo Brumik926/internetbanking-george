@@ -1,3 +1,4 @@
+import { validateIban, formatIban } from "@/lib/iban-validator";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -88,11 +89,14 @@ export default function NovaPlatba() {
     setPin("");
     setPinError("");
 
-    if (!name.trim()) return setError("Zadajte meno príjemcu.");
-    if (!iban.trim()) return setError("Zadajte IBAN príjemcu.");
+    if (!name.trim()) return setError("Zadajte meno príjemcu.");a
     if (!Number.isFinite(value) || value <= 0) return setError("Zadajte platnú sumu.");
     if (value > balance(s)) return setError("Nedostatočný zostatok na účte.");
 
+    const ibanCheck = validateIban(iban);
+if (!ibanCheck.valid) {
+  return setError(ibanCheck.error ?? "Neplatný IBAN príjemcu.");
+}
     const savedBioPay = window.localStorage.getItem(`george-bio-pay:${user.id}`) !== "false";
     const hasBio = isBiometricEnabled(user.id);
     const canUseBio = bioSupported && savedBioPay && hasBio;
