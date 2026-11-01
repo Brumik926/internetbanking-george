@@ -1,167 +1,350 @@
-import { SessionTimeoutWarning } from "@/components/bank/SessionTimeoutWarning";
-import { createFileRoute, isRedirect, Link, Outlet, redirect } from "@tanstack/react-router";
-import { Component, type ErrorInfo, type ReactNode } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { PersistentBottomNav } from "@/components/bank/AppShell";
-import { AiChatButton } from "@/components/bank/AiChatModal";
-import { SwipeNav } from "@/components/bank/SwipeNav";
-import { BiometricLock } from "@/components/bank/BiometricLock";
-import { Button } from "@/components/ui/button";
-import { useBank, balance, monthTotals, formatEur, formatDate } from "@/lib/bank-store";
-import { useWebMCP } from "use-webmcp-tool";
-import { runWebMCPTool } from "@/lib/webmcp-telemetry";
-import { reportLovableError } from "@/lib/lovable-error-reporting";
+import { lovable } from "@/integrations/lovable/index";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
-export const Route = createFileRoute("/_authenticated")({
-  ssr: false,
-  beforeLoad: async () => {
-    try {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) {
-        // Neplatný/expirovaný token: vyčistiť lokálnu reláciu, aby sa používateľ mohol znova prihlásiť
-        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
-        throw redirect({ to: "/auth" });
-      }
-      return { user: data.user };
-    } catch (error) {
-      if (isRedirect(error)) throw error;
-      await supabase.auth.signOut({ scope: "local" }).catch(() => {});
-      throw redirect({ to: "/auth" });
-    }
-  },
-  component: AuthenticatedLayout,
-  pendingComponent: AuthLoadingComponent,
-  errorComponent: AuthErrorComponent,
-  notFoundComponent: () => (
-    <div className="flex min-h-screen items-center justify-center bg-background p-6 text-center">
-      <p className="text-sm text-muted-foreground">Stránka sa nenašla.</p>
-    </div>
-  ),
+export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>): { next?: string } =>
+    typeof s["next"] === "string" ? { next: s["next"] } : {},
+  head: () => ({
+    meta: [
+      { title: "Prihlásenie · Internetbanking George" },
+      {
+        name: "description",
+        content: "Prihláste sa do internetbankingu George a majte svoje platby, sporenie a rozpočet vždy po ruke.",
+      },
+      { property: "og:title", content: "Prihlásenie · Internetbanking George" },
+      {
+        property: "og:description",
+        content: "Prihláste sa do internetbankingu George a majte svoje platby, sporenie a rozpočet vždy po ruke.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: AuthPage,
 });
 
-function AuthLoadingComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-6 text-center">
-      <p className="text-sm text-muted-foreground">Overujem prihlásenie…</p>
-    </div>
-  );
-}
+function AuthPage() {
+  const navigate = useNavigate();
+  const { next: rawNext } = Route.useSearch();
+  const next = oauthReturnPath(rawNext);
+  const goNext = () => {
+    if (next !== "/") window.location.href = next;
+    else navigate({ to: "/", replace: true });
+  };
 
-function AuthErrorComponent({ error }: { error: unknown }) {
-  console.error(error);
-  return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-      <h1 className="text-xl font-bold">Obrazovka sa nenačítala</h1>
-      <p className="text-sm text-muted-foreground">Skúste to prosím znova alebo sa prihláste odznova.</p>
-      <div className="flex gap-2">
-        <Button
-          onClick={() => window.location.reload()}
-          className="h-11 rounded-xl px-4 font-semibold"
-        >
-          Obnoviť
-        </Button>
-        <Link
-          to="/auth"
-          className="rounded-xl border border-border bg-surface px-4 py-2.5 font-semibold text-foreground"
-        >
-          Prihlásenie
-        </Link>
-      </div>
-    </div>
-  );
-}
+  const [mode, setMode] = useState<"in" | "up" | "reset">("in");
+  const [owner, setOwner] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [isRecovery, setIsRecovery] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
-class AuthenticatedErrorBoundary extends Component<
-  { children: ReactNode },
-  { failed: boolean }
-> {
-  override state = { failed: false };
-
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-
-  override componentDidCatch(error: unknown, info: ErrorInfo) {
-    console.error(error);
-    reportLovableError(error, {
-      boundary: "authenticated_layout",
-      componentStack: info.componentStack ?? "",
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session && !isRecovery) goNext();
     });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setIsRecovery(true);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate, next, isRecovery]);
+
+  async function submitNewPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success("Vaše heslo bolo úspešne zmenené.");
+      setIsRecovery(false);
+      goNext();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Zmena hesla zlyhala.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  override render() {
-    if (this.state.failed) return <AuthErrorComponent error={new Error("Authenticated page failed")} />;
-    return this.props.children;
-  }
-}
-
-function BankDataGate({ children }: { children: ReactNode }) {
-  const bank = useBank();
-
-  if (bank.loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-6 text-center">
-        <p className="text-sm text-muted-foreground">Načítavam údaje účtu…</p>
-      </div>
-    );
-  }
-
-  if (bank.error) {
-    return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-        <h1 className="text-xl font-bold">Údaje sa nenačítali</h1>
-        <p className="max-w-sm text-sm text-muted-foreground">{bank.error}</p>
-        <Button onClick={() => window.location.reload()} className="h-11 rounded-xl px-5 font-semibold">
-          Skúsiť znova
-        </Button>
-      </div>
-    );
+  async function handlePasswordReset(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) {
+      toast.error("Zadajte prosím váš e-mail.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: new URL("/auth", window.location.origin).href,
+      });
+      if (error) throw error;
+      setResetSent(true);
+      toast.success("Odkaz na obnovenie hesla sme odoslali na váš e-mail.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Odoslanie odkazu zlyhalo.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  return <><BankWebTools />{children}</>;
-}
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      if (mode === "up") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: new URL(next, window.location.origin).href,
+            data: { owner: owner.trim() },
+          },
+        });
+        if (error) throw error;
+        if (!data.session) {
+          setSent(true);
+          toast.success("Poslali sme vám overovací e-mail. Potvrďte ho a potom sa prihláste.");
+          return;
+        }
+        toast.success("Účet je vytvorený.");
+        goNext();
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        toast.success("Prihlásenie úspešné.");
+        goNext();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Prihlásenie sa nepodarilo.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
-function BankWebTools() {
-  const bank = useBank();
-  useWebMCP({
-    name: "get_account_summary",
-    description: "Read the account balance and this month's income and expenses shown in the app.",
-    annotations: { readOnlyHint: true },
-    execute: () =>
-      runWebMCPTool("get_account_summary", () => {
-        const { income, expense } = monthTotals(bank);
-        return `Zostatok ${formatEur(balance(bank))}; tento mesiac príjmy ${formatEur(income)}, výdavky ${formatEur(expense)}.`;
-      }),
-  });
-  useWebMCP({
-    name: "list_recent_transactions",
-    description: "List the 20 most recent transactions on the account.",
-    annotations: { readOnlyHint: true, untrustedContentHint: true },
-    execute: () =>
-      runWebMCPTool("list_recent_transactions", () =>
-        bank.transactions.length === 0
-          ? "Žiadne transakcie."
-          : bank.transactions.slice(0, 20).map((t) => `${t.id}: ${formatDate(t.date)} ${t.type === "in" ? "+" : "-"}${formatEur(t.amount)} ${t.counterparty}`).join("\n"),
-      ),
-  });
-  return null;
-}
-
-function AuthenticatedLayout() {
-  const { user } = Route.useRouteContext();
+  async function google() {
+    setBusy(true);
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: new URL(next, window.location.origin).href,
+    });
+    if (result.error) {
+      setBusy(false);
+      toast.error("Prihlásenie cez Google sa nepodarilo.");
+      return;
+    }
+    if (result.redirected) return;
+    goNext();
+  }
 
   return (
-    <AuthenticatedErrorBoundary>
-      <BiometricLock userId={user.id}>
-        <BankDataGate>
-          <div className="mx-auto min-h-screen w-full max-w-[430px] bg-background pb-28 relative">
-            <SwipeNav><Outlet /></SwipeNav>
-            <AiChatButton />
-            <PersistentBottomNav />
-            <SessionTimeoutWarning />
-          </div>
-        </BankDataGate>
-      </BiometricLock>
-    </AuthenticatedErrorBoundary>
+    <div className="mx-auto min-h-screen w-full max-w-[430px] bg-background">
+      <header className="brand-header px-5 pb-14 pt-10 text-brand-foreground">
+        <p className="text-[13px] font-semibold tracking-wide opacity-90">George · Slovenská sporiteľňa</p>
+        <h1 className="mt-3 text-[34px] font-bold leading-none">
+          {isRecovery
+            ? "Nové heslo"
+            : mode === "reset"
+            ? "Obnova hesla"
+            : mode === "in"
+            ? "Prihlásenie"
+            : "Nový účet"}
+        </h1>
+        <p className="mt-2 text-sm opacity-80">
+          {isRecovery
+            ? "Zadajte nové bezpečné heslo k vášmu účtu."
+            : mode === "reset"
+            ? "Zadajte svoj e-mail a pošleme vám odkaz na obnovenie prístupu."
+            : "Vaše platby, sporenie a rozpočet zostanú uložené aj po zatvorení aplikácie."}
+        </p>
+      </header>
+
+      <div className="-mt-10 px-5">
+        <div className="rounded-3xl border border-border bg-surface p-5 shadow-lg">
+          {isRecovery ? (
+            <form onSubmit={submitNewPassword} className="space-y-4">
+              <label className="block text-sm">
+                <span className="text-muted-foreground">Nové heslo</span>
+                <input
+                  required
+                  type="password"
+                  minLength={8}
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Minimálne 8 znakov"
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-primary"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                Uložiť nové heslo
+              </button>
+            </form>
+          ) : mode === "reset" ? (
+            <div>
+              {resetSent ? (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground">
+                    Odkaz na obnovenie hesla sme odoslali na adresu <strong>{email}</strong>.
+                    Skontrolujte si e-mailovú schránku (prípadne priečinok Spam).
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResetSent(false);
+                      setMode("in");
+                    }}
+                    className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground"
+                  >
+                    Späť na prihlásenie
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handlePasswordReset} className="space-y-4">
+                  <label className="block text-sm">
+                    <span className="text-muted-foreground">Váš prihlasovací e-mail</span>
+                    <input
+                      required
+                      type="email"
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="meno@priklad.sk"
+                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-primary"
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground disabled:opacity-60"
+                  >
+                    Odoslať odkaz na obnovenie
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("in")}
+                    className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
+                  >
+                    Naspäť na prihlásenie
+                  </button>
+                </form>
+              )}
+            </div>
+          ) : sent ? (
+            <p className="text-sm text-muted-foreground">
+              Skontrolujte si e-mail <strong className="text-foreground">{email}</strong> a potvrďte registráciu.
+              Potom sa môžete prihlásiť.
+            </p>
+          ) : (
+            <form onSubmit={submit} className="space-y-4">
+              {mode === "up" ? (
+                <label className="block text-sm">
+                  <span className="text-muted-foreground">Meno majiteľa účtu</span>
+                  <input
+                    required
+                    value={owner}
+                    onChange={(e) => setOwner(e.target.value)}
+                    placeholder="Jakub Varga"
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-primary"
+                  />
+                </label>
+              ) : null}
+              <label className="block text-sm">
+                <span className="text-muted-foreground">E-mail</span>
+                <input
+                  required
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-primary"
+                />
+              </label>
+              <label className="block text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Heslo</span>
+                  {mode === "in" && (
+                    <button
+                      type="button"
+                      onClick={() => setMode("reset")}
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Zabudli ste heslo?
+                    </button>
+                  )}
+                </div>
+                <input
+                  required
+                  type="password"
+                  minLength={mode === "up" ? 8 : 6}
+                  autoComplete={mode === "in" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-foreground outline-none focus:border-primary"
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full rounded-xl bg-primary px-4 py-3 font-semibold text-primary-foreground disabled:opacity-60"
+              >
+                {mode === "in" ? "Prihlásiť sa" : "Vytvoriť účet"}
+              </button>
+            </form>
+          )}
+
+          {!isRecovery && mode !== "reset" && (
+            <>
+              <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+                <span className="h-px flex-1 bg-border" />
+                alebo
+                <span className="h-px flex-1 bg-border" />
+              </div>
+
+              <button
+                type="button"
+                onClick={google}
+                disabled={busy}
+                className="w-full rounded-xl border border-border bg-background px-4 py-3 font-semibold text-foreground disabled:opacity-60"
+              >
+                Pokračovať s Google
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === "in" ? "up" : "in");
+                  setSent(false);
+                }}
+                className="mt-4 w-full text-center text-sm text-muted-foreground underline"
+              >
+                {mode === "in" ? "Nemáte účet? Zaregistrujte sa" : "Už máte účet? Prihláste sa"}
+              </button>
+            </>
+          )}
+        </div>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Potrebujete pomôcť s prihlásením?{" "}
+          <a href="tel:0850111888" className="text-primary hover:underline">
+            Klientske centrum 0850 111 888
+          </a>
+        </p>
+      </div>
+    </div>
   );
 }
