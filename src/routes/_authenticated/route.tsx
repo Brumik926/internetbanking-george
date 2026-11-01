@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { oauthReturnPath } from "@/lib/oauth-return-path";
 
-export const Route = createFileRoute("/auth")({
+export const Route = createFileRoute("/_authenticated")({
   validateSearch: (s: Record<string, unknown>): { next?: string } =>
     typeof s["next"] === "string" ? { next: s["next"] } : {},
   head: () => ({
