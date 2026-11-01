@@ -19,3 +19,4 @@
 - [x] Vytvoriť a overiť nové APK s logom S s bodkou
 - [ ] Upraviť FIT / Rozpočet: mesačné výdavky, príjmy, limity a overenie
 - [x] Dokončiť Google Search Console: pripojenie, overenie publikovanej stránky a odoslanie sitemap
+- [ ] Opraviť opakované zobrazenie prihlásenia a overiť otvorenie Prehľadu a platieb
