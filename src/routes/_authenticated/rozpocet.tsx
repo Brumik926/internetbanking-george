@@ -14,7 +14,6 @@ import {
   CATEGORIES,
   formatEur,
   useBank,
-  type Transaction,
 } from "@/lib/bank-store";
 
 export const Route = createFileRoute("/_authenticated/rozpocet")({

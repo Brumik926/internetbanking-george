@@ -54,6 +54,10 @@ export const Route = createFileRoute("/_authenticated/")({
     meta: [
       { title: "Internetbanking George | Prehľad" },
       { name: "description", content: "Prehľad účtu a financií v internetbankingu George." },
+      { property: "og:title", content: "Internetbanking George | Prehľad" },
+      { property: "og:description", content: "Prehľad účtu a financií v internetbankingu George." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: GeorgePrehladModern,
@@ -120,7 +124,7 @@ function MerchantLogo({ counterparty, category }: { counterparty: string; catego
     (category || "").toLowerCase().includes("poplatk");
 
   if (isBankFee) {
-    return <SlspLogo size={40} className="shadow-sm" />;
+    return <SlspLogo size={40} />;
   }
 
   if (name.includes("kaufland")) {
@@ -275,9 +279,9 @@ export function GeorgePrehladModern() {
       if (!u) return;
       const meta = u.user_metadata || {};
       const full =
-        meta.full_name ||
-        meta.name ||
-        (meta.first_name && meta.last_name ? `${meta.first_name} ${meta.last_name}` : null);
+        meta["full_name"] ||
+        meta["name"] ||
+        (meta["first_name"] && meta["last_name"] ? `${meta["first_name"]} ${meta["last_name"]}` : null);
       if (full) {
         setUserName(full);
       } else if (u.email) {
@@ -288,7 +292,7 @@ export function GeorgePrehladModern() {
             cleaned
               .split(" ")
               .filter(Boolean)
-              .map((w: string) => w[0].toUpperCase() + w.slice(1))
+              .map((w: string) => (w[0] ?? "").toUpperCase() + w.slice(1))
               .join(" ")
           );
         }
@@ -318,7 +322,7 @@ export function GeorgePrehladModern() {
   const totalParts = splitAmount(total);
   const expParts = splitAmount(totals.expense);
   const incParts = splitAmount(totals.income);
-  const savParts = splitAmount(s.savingsBalance ?? 0);
+  const savParts = splitAmount(s.goals.reduce((sum, goal) => sum + goal.saved, 0));
 
   const cardLastFour = "3302";
 
