@@ -99,8 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "George · Slovenská sporiteľňa" },
       { name: "twitter:description", content: "Prevody, história platieb, sporenie a rozpočet v jednej aplikácii." },
       { name: "twitter:image", content: "https://internetbanking-george.lovable.app/icon-512.png" },
-      // Ak máte overovací kód zo Search Console, nahraďte hodnotu content:
-      { name: "google-site-verification", content: "GSC_OVEROVACI_KOD_SEM" },
+      { name: "google-site-verification", content: "sy-u0OHgyfu7ISKRYJi2wk40lONZxKH1UgyjbSdP8SI" },
     ],
     links: [
       {
