@@ -55,11 +55,13 @@ function Nastavenia() {
   const [owner, setOwner] = useState("");
   const [iban, setIban] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
-    setOwner(s.owner || "Tomáš Lizák");
-    setIban(s.iban || "SK31 1200 3545 0984 0539");
-  }, [s.owner, s.iban]);
+    if (isEditing) return;
+    setOwner(s.owner);
+    setIban(s.iban);
+  }, [s.owner, s.iban, isEditing]);
 
   // Téma (Denný / Nočný režim) — spravuje ThemeProvider v koreni
   const { isLight: light, toggleTheme } = useTheme();
@@ -120,9 +122,16 @@ function Nastavenia() {
   }
 
   async function handleSaveProfile() {
-    await saveProfile(owner.trim(), iban.trim());
-    setIsEditing(false);
-    toast.success("Údaje účtu boli uložené");
+    setProfileSaving(true);
+    try {
+      await saveProfile(owner.trim(), iban.trim());
+      setIsEditing(false);
+      toast.success("Údaje účtu boli uložené");
+    } catch {
+      toast.error("Údaje účtu sa nepodarilo uložiť. Skúste to znova.");
+    } finally {
+      setProfileSaving(false);
+    }
   }
 
   async function signOut() {
@@ -150,7 +159,7 @@ function Nastavenia() {
           Nastavenia
         </h1>
         <p className="text-[16px] text-white/80 font-medium">
-          {owner}
+          {s.owner}
         </p>
       </div>
 
@@ -315,6 +324,7 @@ function Nastavenia() {
             <button
               type="button"
               onClick={() => setIsEditing(!isEditing)}
+              disabled={s.loading || profileSaving}
               className="text-[13px] font-semibold text-[#196ee6] dark:text-[#38bdf8] hover:underline"
             >
               {isEditing ? "Zrušiť" : "Upraviť"}
@@ -327,6 +337,7 @@ function Nastavenia() {
                 <div>
                   <label className="text-xs text-slate-400 dark:text-zinc-500 font-medium">Meno majiteľa</label>
                   <input
+                    aria-label="Meno majiteľa"
                     type="text"
                     value={owner}
                     onChange={(e) => setOwner(e.target.value)}
@@ -336,6 +347,7 @@ function Nastavenia() {
                 <div>
                   <label className="text-xs text-slate-400 dark:text-zinc-500 font-medium">IBAN</label>
                   <input
+                    aria-label="IBAN účtu"
                     type="text"
                     value={iban}
                     onChange={(e) => setIban(e.target.value)}
@@ -345,16 +357,17 @@ function Nastavenia() {
                 <button
                   type="button"
                   onClick={handleSaveProfile}
+                  disabled={profileSaving}
                   className="w-full py-2.5 rounded-xl bg-[#196ee6] text-white font-semibold text-sm active:scale-98 transition"
                 >
-                  Uložiť zmeny
+                  {profileSaving ? "Ukladám…" : "Uložiť zmeny"}
                 </button>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-400 dark:text-zinc-500">Vlastník</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{owner}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{s.owner}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-400 dark:text-zinc-500">IBAN</span>

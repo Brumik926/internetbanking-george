@@ -763,7 +763,7 @@ export default function UcetDetail() {
             <div className="rounded-3xl bg-detail-surface p-5 space-y-4">
               <div>
                 <p className="text-[12px] text-detail-muted">Majiteľ účtu</p>
-                <p className="text-[15px] font-medium text-foreground">{s.owner || "Tomáš Lizák"}</p>
+                <p className="text-[15px] font-medium text-foreground">{s.owner}</p>
               </div>
               <div>
                 <p className="text-[12px] text-detail-muted">Názov účtu</p>

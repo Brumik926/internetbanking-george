@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Zjednotiť meno majiteľa podľa uloženého profilu a overiť uloženie aj zobrazenie.
+
 - [x] Dizajn podľa predlohy (tmavý štýl, bordová hlavička)
 - [x] Prehľad: zostatok, príjmy/výdavky za mesiac
 - [x] Nová platba (prevod) s IBAN, sumou, správou
