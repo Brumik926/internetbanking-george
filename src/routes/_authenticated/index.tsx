@@ -271,34 +271,7 @@ export function GeorgePrehladModern() {
   const navigate = useNavigate();
 
   const [currentViewMode, setCurrentViewMode] = useState<"dashboard" | "profile">("dashboard");
-  const [userName, setUserName] = useState("Tomáš Lizák");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      const u = data.user;
-      if (!u) return;
-      const meta = u.user_metadata || {};
-      const full =
-        meta["full_name"] ||
-        meta["name"] ||
-        (meta["first_name"] && meta["last_name"] ? `${meta["first_name"]} ${meta["last_name"]}` : null);
-      if (full) {
-        setUserName(full);
-      } else if (u.email) {
-        const local = u.email.split("@")[0] || "";
-        const cleaned = local.replace(/[0-9._-]+/g, " ").trim();
-        if (cleaned) {
-          setUserName(
-            cleaned
-              .split(" ")
-              .filter(Boolean)
-              .map((w: string) => (w[0] ?? "").toUpperCase() + w.slice(1))
-              .join(" ")
-          );
-        }
-      }
-    });
-  }, []);
+  const userName = s.owner;
 
   const [hidden, setHidden] = useState(false);
   useEffect(() => {

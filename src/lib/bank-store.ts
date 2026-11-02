@@ -334,10 +334,15 @@ export async function removeBudget(category: string) {
 
 export async function saveProfile(owner: string, iban: string) {
   const userId = await currentUserId();
-  if (!userId) return;
-  await supabase.from("profiles").upsert({ id: userId, owner, iban, seeded: true });
-  state.owner = owner;
-  state.iban = iban;
+  if (!userId) throw new Error("Pre uloženie údajov sa prihláste.");
+  const { data, error } = await supabase.from("profiles")
+    .upsert({ id: userId, owner: owner.trim(), iban: iban.trim(), seeded: true })
+    .select("owner, iban")
+    .single();
+  if (error) throw error;
+  if (!data) throw new Error("Údaje účtu sa nepodarilo uložiť.");
+  state.owner = data.owner;
+  state.iban = data.iban;
   emit();
 }
 

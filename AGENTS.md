@@ -14,3 +14,4 @@
 - Android TWA releases open the published site and must have their signing certificate listed in Digital Asset Links; retain earlier fingerprints so old installations remain associated. Keep signing credentials only in private artifact metadata, never in source.
 - FIT monthly totals and category breakdowns use the pure budget-summary selector with a local-calendar month; recurring category limits remain in the existing bank store so browsing history does not modify account data.
 - Keep login and password recovery on the public auth route; the protected layout validates the user and renders Outlet so successful login exposes child screens instead of a second login form.
+- Account owner displays consume the shared bank store's persisted profile; edit drafts stay local and saveProfile publishes only confirmed database results so screens cannot disagree after saving.
