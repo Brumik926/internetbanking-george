@@ -431,7 +431,7 @@ function LoginHistory() {
               </div>
               <div className="text-right">
                 <p className="text-[12px] font-medium">{fmt(e.created_at)}</p>
-                {i === 0 && <p className="text-[11px] font-semibold text-emerald-500">Toto zariadenie</p>}
+                {i === 0 && <p className="text-[11px] font-semibold text-emerald-500">Najnovší</p>}
               </div>
             </div>
           ))
