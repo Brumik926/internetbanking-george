@@ -315,6 +315,9 @@ function Nastavenia() {
           </div>
         </div>
 
+        <LoginHistory />
+
+
         {/* MÔJ ÚČET */}
         <div>
           <div className="flex items-center justify-between px-1 mb-2">

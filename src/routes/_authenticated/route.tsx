@@ -1,4 +1,6 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { recordLogin } from "@/lib/login-log";
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricLock } from "@/components/bank/BiometricLock";
 import { PersistentBottomNav } from "@/components/bank/AppShell";
@@ -18,6 +20,9 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
+  useEffect(() => {
+    void recordLogin(user.id, user.email ?? "");
+  }, [user.id, user.email]);
   return (
     <BiometricLock key={user.id} userId={user.id}>
       <Outlet />
