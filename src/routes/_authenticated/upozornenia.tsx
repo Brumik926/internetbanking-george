@@ -1,4 +1,4 @@
-wimport { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Bell, BellRing, PieChart, Volume2, Smartphone } from "lucide-react";
 import {
   clearNotifications,
