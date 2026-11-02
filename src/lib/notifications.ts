@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import soundAsset from "@/assets/notification.mp3.asset.json";
 
-export type NotifKind = "in" | "out" | "budget";
+export type NotifKind = "in" | "out" | "budget" | "access";
 
 export type NotifSettings = {
   onIncoming: boolean;
