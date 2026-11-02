@@ -142,7 +142,13 @@ export function playNotificationSound() {
 
 export async function notify(kind: NotifKind, title: string, body: string) {
   const enabled =
-    kind === "in" ? state.settings.onIncoming : kind === "out" ? state.settings.onOutgoing : state.settings.onBudget;
+    kind === "in"
+      ? state.settings.onIncoming
+      : kind === "out"
+      ? state.settings.onOutgoing
+      : kind === "access"
+      ? true
+      : state.settings.onBudget;
   if (!enabled) return;
 
   if (state.settings.soundEnabled) playNotificationSound();
