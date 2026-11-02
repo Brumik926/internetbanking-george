@@ -161,7 +161,46 @@ export async function loadAll() {
   const profile = await seedIfNeeded(userId);
 
   const [txns, goals, budgets] = await Promise.all([
-    supabase.from("transactions").select("*").order("date", { ascending: false }),
+    export async function addTransaction(t: Omit<Txn, "id">) {
+  const userId = await currentUserId();
+  if (!userId) {
+    throw new Error("Používateľ nie je prihlásený. Platbu nie je možné uložiť.");
+  }
+
+  // 1. Zápis do databázy s kontrolou chyby
+  const { data, error } = await supabase
+    .from("transactions")
+    .insert({
+      user_id: userId,
+      type: t.type,
+      counterparty: t.counterparty,
+      iban: t.iban ?? null,
+      amount: t.amount,
+      date: t.date,
+      category: t.category,
+      note: t.note ?? null,
+      vs: t.vs ?? null,
+    })
+    .select("id")
+    .single();
+
+  // Ak databáza odmietne zápis, vyvoláme chybu – platba sa NEULOŽÍ iba do pamäte
+  if (error || !data) {
+    console.error("Chyba pri ukladaní transakcie do databázy:", error);
+    throw new Error(error?.message || "Nepodarilo sa uložiť platbu do databázy.");
+  }
+
+  // 2. Priradíme skutočné ID z databázy
+  const newTxn: Txn = { ...t, id: data.id };
+  state.transactions = [newTxn, ...state.transactions].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  emit();
+
+  void announceTransaction(newTxn);
+  return newTxn;
+}
+
     supabase.from("goals").select("*").order("created_at", { ascending: true }),
     supabase.from("budgets").select("*").order("created_at", { ascending: true }),
   ]);
