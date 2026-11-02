@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+wimport { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Bell, BellRing, PieChart, Volume2, Smartphone } from "lucide-react";
 import {
   clearNotifications,
@@ -140,7 +140,7 @@ function Upozornenia() {
         ) : (
           <ul className="mt-3 space-y-2">
             {items.map((n) => {
-              const Icon = n.kind === "budget" ? PieChart : n.kind === "in" ? BellRing : Bell;
+              const Icon = n.kind === "budget" ? PieChart : n.kind === "in" ? BellRing : n.kind === "access" ? Smartphone : Bell;
               return (
                 <li
                   key={n.id}
