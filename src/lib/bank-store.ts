@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+1import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export type Txn = {
@@ -227,8 +227,12 @@ export function useBank() {
 
 export async function addTransaction(t: Omit<Txn, "id">) {
   const userId = await currentUserId();
-  if (!userId) return;
-  const { data } = await supabase
+  if (!userId) {
+    throw new Error("Používateľ nie je prihlásený. Platbu nie je možné uložiť.");
+  }
+
+  // 1. Zápis do databázy s kontrolou chyby
+  const { data, error } = await supabase
     .from("transactions")
     .insert({
       user_id: userId,
@@ -242,7 +246,24 @@ export async function addTransaction(t: Omit<Txn, "id">) {
       vs: t.vs ?? null,
     })
     .select("id")
-    .maybeSingle();
+    .single();
+
+  // Ak databáza odmietne zápis, vyvoláme chybu – platba sa NEULOŽÍ iba do pamäte
+  if (error || !data) {
+    console.error("Chyba pri ukladaní transakcie do databázy:", error);
+    throw new Error(error?.message || "Nepodarilo sa uložiť platbu do databázy.");
+  }
+
+  // 2. Priradíme skutočné ID z databázy
+  const newTxn: Txn = { ...t, id: data.id };
+  state.transactions = [newTxn, ...state.transactions].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  emit();
+
+  void announceTransaction(newTxn);
+  return newTxn;
+};
 
   const newTxn = { ...t, id: data?.id ?? crypto.randomUUID() };
   state.transactions = [newTxn, ...state.transactions].sort(
