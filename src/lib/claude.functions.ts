@@ -1,8 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const askClaude = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { prompt: string }) => data)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    // Overený prihlásený používateľ: context.userId
     const apiKey = process.env["LOVABLE_API_KEY"];
     if (!apiKey) {
       throw new Error("Chýba LOVABLE_API_KEY na serveri.");
