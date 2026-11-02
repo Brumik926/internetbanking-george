@@ -1,6 +1,7 @@
 # Roadmap
 
-- [ ] Zjednotiť meno majiteľa podľa uloženého profilu a overiť uloženie aj zobrazenie.
+- [x] Zjednotiť meno majiteľa podľa uloženého profilu; testy synchronizácie a neúspešného uloženia prešli.
+- [ ] Overiť zmenu mena cez prihlásený náhľad — čaká na prihlásenie používateľa, automatické prihlásenie nie je dostupné.
 
 - [x] Dizajn podľa predlohy (tmavý štýl, bordová hlavička)
 - [x] Prehľad: zostatok, príjmy/výdavky za mesiac
