@@ -1,27 +1,25 @@
+/** Convert a EUR amount to integer cents, rejecting values that cannot be represented safely. */
 export function toCents(value: number): number {
-  const safeValue = Number.isFinite(value) ? value : 0;
-  return Math.round(safeValue * 100);
+  if (!Number.isFinite(value)) throw new Error("Suma musí byť konečné číslo.");
+  const cents = Math.round((value + Number.EPSILON) * 100);
+  if (!Number.isSafeInteger(cents)) throw new Error("Suma je mimo povoleného rozsahu.");
+  return cents;
 }
 
-export function fromCents(value: number): number {
-  const safeValue = Number.isFinite(value) ? value : 0;
-  return Number((Math.round(safeValue) / 100).toFixed(2));
+/** Convert integer cents to a display-compatible EUR number. */
+export function fromCents(cents: number): number {
+  if (!Number.isSafeInteger(cents)) throw new Error("Suma v centoch musí byť bezpečné celé číslo.");
+  return cents / 100;
 }
 
+/** Parse Slovak/European decimal input into EUR; rejects ambiguous or over-precise values. */
 export function parseMoneyInput(raw: string): number | null {
   const normalized = raw.trim().replace(/\s+/g, "").replace(",", ".");
-  if (!normalized || Number.isNaN(Number(normalized))) {
-    return null;
-  }
-
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
+  if (!/^(?:0|[1-9]\d*)(?:\.\d{1,2})?$/.test(normalized)) return null;
+  const value = Number(normalized);
+  return Number.isFinite(value) ? value : null;
 }
 
-export function sumMoney(values: number[]): number {
-  return fromCents(values.reduce((sum, value) => sum + toCents(value), 0));
-}
-
-export function moneyStringFromCents(cents: number): string {
-  return fromCents(cents).toFixed(2);
+export function formatCents(cents: number, currency = "EUR", locale = "sk-SK"): string {
+  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(fromCents(cents));
 }
