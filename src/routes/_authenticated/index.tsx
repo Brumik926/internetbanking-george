@@ -283,7 +283,12 @@ export function GeorgePrehladModern() {
 
   function toggleHidden() {
     setHidden((prev) => {
-      const next = !prev;
+    const [latestForeignAccess, setLatestForeignAccess] = useState<LoginEvent | null>(null);
+
+  useEffect(() => {
+    void getLatestForeignLogin().then(setLatestForeignAccess);
+  }, [])    
+const next = !prev;
       try {
         localStorage.setItem("george-hide-balance", next ? "1" : "0");
       } catch {}
