@@ -404,32 +404,111 @@ function Nastavenia() {
 
 function LoginHistory() {
   const [items, setItems] = useState<LoginEvent[] | null>(null);
-  const currentLoginId = typeof window !== "undefined" ? sessionStorage.getItem("george-current-login-id") : null;
+  const [period, setPeriod] = useState<"day" | "week" | "month">("day");
+  const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email?: string } | null>(null);
 
+  // Zistenie aktuálneho účtu pre vyfiltrovanie vlastných prihlásení
   useEffect(() => {
-    void listLogins().then(setItems);
+    let active = true;
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!active) return;
+      if (data.user) {
+        setCurrentUser({ id: data.user.id, email: data.user.email });
+      }
+    });
+    return () => {
+      active = false;
+    };
   }, []);
+
+  // Načítanie prístupov podľa zvoleného obdobia
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    void listLogins({
+      period,
+      excludeUserId: currentUser?.id,
+      excludeEmail: currentUser?.email,
+    }).then((res) => {
+      if (active) {
+        setItems(res);
+        setLoading(false);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [period, currentUser]);
 
   return (
     <div>
       <div className="flex items-center justify-between px-1 mb-2">
         <h2 className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase">
-          Posledné prístupy a zariadenia
+          Prístupy a zariadenia
         </h2>
         <span className="text-[11px] text-slate-400 dark:text-zinc-500">
-          {items?.length ?? 0} záznamov
+          {items?.length ?? 0} {items?.length === 1 ? "záznam" : (items?.length ?? 0) >= 2 && (items?.length ?? 0) <= 4 ? "záznamy" : "záznamov"}
         </span>
       </div>
 
+      {/* Filter: Dnes / Tento týždeň / Tento mesiac */}
+      <div className="flex gap-1.5 p-1 mb-2.5 rounded-2xl bg-slate-100 dark:bg-zinc-800/80">
+        <button
+          type="button"
+          onClick={() => setPeriod("day")}
+          className={`flex-1 py-1.5 text-[12px] font-semibold rounded-xl transition ${
+            period === "day"
+              ? "bg-white dark:bg-[#161a23] text-slate-900 dark:text-white shadow-xs"
+              : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
+          }`}
+        >
+          Dnes
+        </button>
+        <button
+          type="button"
+          onClick={() => setPeriod("week")}
+          className={`flex-1 py-1.5 text-[12px] font-semibold rounded-xl transition ${
+            period === "week"
+              ? "bg-white dark:bg-[#161a23] text-slate-900 dark:text-white shadow-xs"
+              : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
+          }`}
+        >
+          Tento týždeň
+        </button>
+        <button
+          type="button"
+          onClick={() => setPeriod("month")}
+          className={`flex-1 py-1.5 text-[12px] font-semibold rounded-xl transition ${
+            period === "month"
+              ? "bg-white dark:bg-[#161a23] text-slate-900 dark:text-white shadow-xs"
+              : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
+          }`}
+        >
+          Tento mesiac
+        </button>
+      </div>
+
+      {/* Posúvateľné okienko so zoznamom */}
       <div className="rounded-3xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-y-auto max-h-[320px] overscroll-contain">
-        {items === null ? (
+        {loading && items === null ? (
           <p className="p-4 text-sm text-slate-400">Načítavam prístupy…</p>
-        ) : items.length === 0 ? (
-          <p className="p-4 text-sm text-slate-400">Zatiaľ žiadne zaznamenané prístupy</p>
+        ) : !items || items.length === 0 ? (
+          <div className="p-5 text-center text-slate-400 dark:text-zinc-500 text-sm">
+            <p className="font-medium text-slate-600 dark:text-zinc-300 mb-0.5">
+              Žiadne cudzie prístupy
+            </p>
+            <p className="text-[12px]">
+              {period === "day"
+                ? "Dnes neboli zaznamenané iné prihlásenia."
+                : period === "week"
+                ? "Tento týždeň neboli zaznamenané iné prihlásenia."
+                : "Tento mesiac neboli zaznamenané iné prihlásenia."}
+            </p>
+          </div>
         ) : (
           items.map((e) => {
             const status = formatLastSeen(e.created_at);
-            const isCurrentDevice = currentLoginId === e.id;
 
             return (
               <div key={e.id} className="p-4 flex items-center gap-3.5">
@@ -441,16 +520,9 @@ function LoginHistory() {
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[14px] font-semibold truncate text-slate-900 dark:text-white">
-                      {e.device}
-                    </p>
-                    {isCurrentDevice && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400">
-                        Toto zariadenie
-                      </span>
-                    )}
-                  </div>
+                  <p className="text-[14px] font-semibold truncate text-slate-900 dark:text-white">
+                    {e.device}
+                  </p>
                   <p className="text-[12px] text-slate-400 dark:text-zinc-500 truncate mt-0.5">
                     {e.email || "Neznámy e-mail"}
                   </p>
