@@ -24,6 +24,7 @@ import { resetStore, saveProfile, useBank } from "@/lib/bank-store";
 import { resetNotifications, unreadCount, useNotifications } from "@/lib/notifications";
 import { useTheme } from "@/lib/theme";
 import { listLogins, formatLastSeen, type LoginEvent } from "@/lib/login-log";
+import { PinSettings } from "@/components/bank/PinSettings";
 import {
   clearUnlocked,
   disableBiometric,
@@ -314,6 +315,7 @@ function Nastavenia() {
               </button>
             </div>
 
+            <PinSettings userId={userId} />
           </div>
         </div>
 
