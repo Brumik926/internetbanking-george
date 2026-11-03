@@ -157,7 +157,6 @@ export default function NovaPlatba() {
       console.error(err);
       toast.error("Biometrické overenie zlyhalo");
       setPinError("Overenie bolo zrušené. Skúste znova Face ID / odtlačok alebo kód telefónu.");
-      setAuthMethod("pin");
       setBusy(false);
     }
   }
