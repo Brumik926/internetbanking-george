@@ -156,7 +156,7 @@ export default function NovaPlatba() {
     } catch (err) {
       console.error(err);
       toast.error("Biometrické overenie zlyhalo");
-      setPinError("Biometrické overenie zlyhalo alebo bolo zrušené. Zadajte George PIN kód.");
+      setPinError("Overenie bolo zrušené. Skúste znova Face ID / odtlačok alebo kód telefónu.");
       setAuthMethod("pin");
       setBusy(false);
     }
@@ -377,7 +377,7 @@ export default function NovaPlatba() {
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-md transition-opacity hover:opacity-95 disabled:opacity-60"
                 >
                   <Fingerprint className="size-5" />
-                  {busy ? "Overujem biometriu…" : "Potvrdiť biometriou"}
+                  {busy ? "Overujem biometriu…" : "Potvrdiť Face ID / odtlačkom"}
                 </button>
 
                 <button
