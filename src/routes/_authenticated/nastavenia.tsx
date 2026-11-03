@@ -406,7 +406,7 @@ function LoginHistory() {
   const [items, setItems] = useState<LoginEvent[] | null>(null);
   const [period, setPeriod] = useState<"day" | "week" | "month">("day");
   const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ id: string; email?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email?: string | undefined } | null>(null);
 
   // Zistenie aktuálneho účtu pre vyfiltrovanie vlastných prihlásení
   useEffect(() => {
@@ -428,8 +428,8 @@ function LoginHistory() {
     setLoading(true);
     void listLogins({
       period,
-      excludeUserId: currentUser?.id,
-      excludeEmail: currentUser?.email,
+      excludeUserId: currentUser?.id ?? null,
+      excludeEmail: currentUser?.email ?? null,
     }).then((res) => {
       if (active) {
         setItems(res);

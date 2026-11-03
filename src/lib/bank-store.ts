@@ -81,7 +81,8 @@ function amountCents(txn: Txn) {
   return txn.amount_cents ?? toCents(txn.amount);
 }
 function fromDatabaseRow(row: any): Txn {
-  const cents = Number(row.amount_cents ?? toCents(num(row.amount)));
+  const stored = Number(row.amount_cents ?? 0);
+  const cents = Number.isFinite(stored) && stored > 0 ? stored : toCents(num(row.amount));
   return {
     id: row.id,
     type: row.type === "in" ? "in" : "out",
