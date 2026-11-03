@@ -1,13 +1,10 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
-  useEffect(() => {
-    if (!user) return;
-    void recordLogin(user.id, user.email ?? "");
-  }, [user]);
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricLock } from "@/components/bank/BiometricLock";
 import { PersistentBottomNav } from "@/components/bank/AppShell";
 import { SessionTimeoutWarning } from "@/components/bank/SessionTimeoutWarning";
+import { recordLogin } from "@/lib/login-log";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -25,9 +22,8 @@ function AuthenticatedLayout() {
   const { user } = Route.useRouteContext();
 
   useEffect(() => {
+    if (!user) return;
     void recordLogin(user.id, user.email ?? "");
-    const cleanup = setupLoginAlerts(user.id);
-    return cleanup;
   }, [user.id, user.email]);
 
   return (
