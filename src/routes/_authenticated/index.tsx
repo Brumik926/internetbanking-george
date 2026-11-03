@@ -1,4 +1,3 @@
-import { getLatestForeignLogin, formatLastSeen, type LoginEvent } from "@/lib/login-log";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
@@ -277,16 +276,11 @@ export function GeorgePrehladModern() {
   const userName = s.owner;
 
   const [hidden, setHidden] = useState(false);
-  const [latestForeignAccess, setLatestForeignAccess] = useState<LoginEvent | null>(null);
 
   useEffect(() => {
     try {
       setHidden(localStorage.getItem("george-hide-balance") === "1");
     } catch {}
-  }, []);
-
-  useEffect(() => {
-    void getLatestForeignLogin().then(setLatestForeignAccess);
   }, []);
 
   function toggleHidden() {
