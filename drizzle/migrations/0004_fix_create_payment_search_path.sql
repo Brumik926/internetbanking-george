@@ -1,1 +1,0 @@
-ALTER FUNCTION public.create_payment(uuid, text, text, bigint, text, text, text) SET search_path = public;
