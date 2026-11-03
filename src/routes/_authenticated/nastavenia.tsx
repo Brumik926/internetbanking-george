@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { resetStore, saveProfile, useBank } from "@/lib/bank-store";
 import { resetNotifications, unreadCount, useNotifications } from "@/lib/notifications";
 import { useTheme } from "@/lib/theme";
-import { listLogins, formatLastSeen, type LoginEvent } from "@/lib/login-log";
+import { listLogins, type LoginEvent } from "@/lib/login-log";
 import {
   clearUnlocked,
   disableBiometric,
@@ -404,144 +404,37 @@ function Nastavenia() {
 
 function LoginHistory() {
   const [items, setItems] = useState<LoginEvent[] | null>(null);
-  const [period, setPeriod] = useState<"day" | "week" | "month">("day");
-  const [loading, setLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{ id: string; email?: string | undefined } | null>(null);
-
-  // Zistenie aktuálneho účtu pre vyfiltrovanie vlastných prihlásení
   useEffect(() => {
-    let active = true;
-    void supabase.auth.getUser().then(({ data }) => {
-      if (!active) return;
-      if (data.user) {
-        setCurrentUser({ id: data.user.id, email: data.user.email });
-      }
-    });
-    return () => {
-      active = false;
-    };
+    void listLogins().then(setItems);
   }, []);
-
-  // Načítanie prístupov podľa zvoleného obdobia
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    void listLogins({
-      period,
-      excludeUserId: currentUser?.id ?? null,
-      excludeEmail: currentUser?.email ?? null,
-    }).then((res) => {
-      if (active) {
-        setItems(res);
-        setLoading(false);
-      }
-    });
-    return () => {
-      active = false;
-    };
-  }, [period, currentUser]);
-
+  const fmt = (d: string) =>
+    new Date(d).toLocaleString("sk-SK", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
   return (
     <div>
-      <div className="flex items-center justify-between px-1 mb-2">
-        <h2 className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase">
-          Prístupy a zariadenia
-        </h2>
-        <span className="text-[11px] text-slate-400 dark:text-zinc-500">
-          {items?.length ?? 0} {items?.length === 1 ? "záznam" : (items?.length ?? 0) >= 2 && (items?.length ?? 0) <= 4 ? "záznamy" : "záznamov"}
-        </span>
-      </div>
-
-      {/* Filter: Dnes / Tento týždeň / Tento mesiac */}
-      <div className="flex gap-1.5 p-1 mb-2.5 rounded-2xl bg-slate-100 dark:bg-zinc-800/80">
-        <button
-          type="button"
-          onClick={() => setPeriod("day")}
-          className={`flex-1 py-1.5 text-[12px] font-semibold rounded-xl transition ${
-            period === "day"
-              ? "bg-white dark:bg-[#161a23] text-slate-900 dark:text-white shadow-xs"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
-          }`}
-        >
-          Dnes
-        </button>
-        <button
-          type="button"
-          onClick={() => setPeriod("week")}
-          className={`flex-1 py-1.5 text-[12px] font-semibold rounded-xl transition ${
-            period === "week"
-              ? "bg-white dark:bg-[#161a23] text-slate-900 dark:text-white shadow-xs"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
-          }`}
-        >
-          Tento týždeň
-        </button>
-        <button
-          type="button"
-          onClick={() => setPeriod("month")}
-          className={`flex-1 py-1.5 text-[12px] font-semibold rounded-xl transition ${
-            period === "month"
-              ? "bg-white dark:bg-[#161a23] text-slate-900 dark:text-white shadow-xs"
-              : "text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-zinc-200"
-          }`}
-        >
-          Tento mesiac
-        </button>
-      </div>
-
-      {/* Posúvateľné okienko so zoznamom */}
-      <div className="rounded-3xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-y-auto max-h-[320px] overscroll-contain">
-        {loading && items === null ? (
-          <p className="p-4 text-sm text-slate-400">Načítavam prístupy…</p>
-        ) : !items || items.length === 0 ? (
-          <div className="p-5 text-center text-slate-400 dark:text-zinc-500 text-sm">
-            <p className="font-medium text-slate-600 dark:text-zinc-300 mb-0.5">
-              Žiadne cudzie prístupy
-            </p>
-            <p className="text-[12px]">
-              {period === "day"
-                ? "Dnes neboli zaznamenané iné prihlásenia."
-                : period === "week"
-                ? "Tento týždeň neboli zaznamenané iné prihlásenia."
-                : "Tento mesiac neboli zaznamenané iné prihlásenia."}
-            </p>
-          </div>
+      <h2 className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase px-1 mb-2">
+        Posledné prístupy
+      </h2>
+      <div className="rounded-3xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-hidden">
+        {items === null ? (
+          <p className="p-4 text-sm text-slate-400">Načítavam…</p>
+        ) : items.length === 0 ? (
+          <p className="p-4 text-sm text-slate-400">Zatiaľ žiadne záznamy</p>
         ) : (
-          items.map((e) => {
-            const status = formatLastSeen(e.created_at);
-
-            return (
-              <div key={e.id} className="p-4 flex items-center gap-3.5">
-                <div className="relative w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8] shrink-0">
-                  <Smartphone className="w-5 h-5" />
-                  {status.isOnline && (
-                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#161a23]" />
-                  )}
-                </div>
-
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-semibold truncate text-slate-900 dark:text-white">
-                    {e.device}
-                  </p>
-                  <p className="text-[12px] text-slate-400 dark:text-zinc-500 truncate mt-0.5">
-                    {e.email || "Neznámy e-mail"}
-                  </p>
-                </div>
-
-                <div className="text-right shrink-0">
-                  <span
-                    className={`inline-block text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                      status.isOnline
-                        ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40"
-                        : "text-slate-500 dark:text-zinc-400 bg-slate-100/70 dark:bg-zinc-800/60"
-                    }`}
-                  >
-                    {status.label}
-                  </span>
-                </div>
+          items.map((e, i) => (
+            <div key={e.id} className="p-4 flex items-center gap-3.5">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8]">
+                <Smartphone className="w-5 h-5" />
               </div>
-            );
-          })
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-semibold truncate">{e.device}</p>
+                <p className="text-[12px] text-slate-400 dark:text-zinc-500 truncate">{e.email}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[12px] font-medium">{fmt(e.created_at)}</p>
+                {i === 0 && <p className="text-[11px] font-semibold text-emerald-500">Najnovší</p>}
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>

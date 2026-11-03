@@ -1,9 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { Eye, EyeOff, BarChart3 } from "lucide-react";
 import {
-  Eye,
-  EyeOff,
-  BarChart3,
   Search,
   CreditCard,
   MoreVertical,
@@ -36,7 +34,7 @@ import {
   UserX,
   LogOut,
   ChevronRight,
-  Wifi,
+  Wifi
 } from "lucide-react";
 import { SlspLogo } from "@/components/bank/SlspLogo";
 import { supabase } from "@/integrations/supabase/client";
@@ -48,7 +46,7 @@ import {
   MONTHS,
   resetStore,
   useBank,
-  type Txn,
+  type Txn
 } from "@/lib/bank-store";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -276,7 +274,6 @@ export function GeorgePrehladModern() {
   const userName = s.owner;
 
   const [hidden, setHidden] = useState(false);
-
   useEffect(() => {
     try {
       setHidden(localStorage.getItem("george-hide-balance") === "1");
@@ -590,8 +587,8 @@ export function GeorgePrehladModern() {
                       {hidden ? "•••• € vlastné zdroje" : `${formatEur(total)} vlastné zdroje`}
                     </p>
                   </div>
-                  <SlspLogo size={52} />
-                </div>
+                    <SlspLogo size={52} />
+               </div>
               </Link>
 
               <div className="flex justify-between items-center mt-4">

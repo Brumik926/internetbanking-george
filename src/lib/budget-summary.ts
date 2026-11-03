@@ -1,32 +1,21 @@
-import { fromCents, toCents } from "@/lib/money";
 import { inMonth, type BankState } from "@/lib/bank-store";
 
-/** Monthly cash flow is accumulated in cents and converted only for screen presentation. */
+/** Monthly cash flow and recurring category limits share the same local-calendar filter. */
 export function budgetSummary(state: Pick<BankState, "transactions" | "budgets">, month: Date) {
-  const rows = state.transactions.filter((txn) => txn.status !== "failed" && inMonth(txn, month));
+  const rows = state.transactions.filter((transaction) => inMonth(transaction, month));
   const categories = (type: "in" | "out") => {
     const amounts = new Map<string, number>();
-    for (const txn of rows) {
-      if (txn.type !== type) continue;
-      const cents = txn.amount_cents ?? toCents(txn.amount);
-      amounts.set(txn.category, (amounts.get(txn.category) ?? 0) + cents);
+    for (const row of rows) {
+      if (row.type !== type) continue;
+      amounts.set(row.category, (amounts.get(row.category) ?? 0) + row.amount);
     }
-    return [...amounts.entries()]
-      .map(([category, cents]) => ({ category, amount: fromCents(cents) }))
+    return [...amounts.entries()].map(([category, amount]) => ({ category, amount }))
       .sort((a, b) => b.amount - a.amount);
   };
   const expenses = categories("out");
   const incomes = categories("in");
-  const expense = expenses.reduce((sum, row) => sum + toCents(row.amount), 0);
-  const income = incomes.reduce((sum, row) => sum + toCents(row.amount), 0);
-  const budget = state.budgets.reduce((sum, row) => sum + toCents(row.limit), 0);
-  return {
-    expenses,
-    incomes,
-    expense: fromCents(expense),
-    income: fromCents(income),
-    budget: fromCents(budget),
-    remaining: fromCents(budget - expense),
-    net: fromCents(income - expense),
-  };
+  const expense = expenses.reduce((sum, row) => sum + row.amount, 0);
+  const income = incomes.reduce((sum, row) => sum + row.amount, 0);
+  const budget = state.budgets.reduce((sum, row) => sum + row.limit, 0);
+  return { expenses, incomes, expense, income, budget, remaining: budget - expense, net: income - expense };
 }
