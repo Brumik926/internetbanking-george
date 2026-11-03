@@ -8,6 +8,14 @@ export type LoginEvent = {
   created_at: string;
 };
 
+export type LoginPeriod = "day" | "week" | "month";
+
+export interface ListLoginsOptions {
+  period?: LoginPeriod;
+  excludeUserId?: string | null;
+  excludeEmail?: string | null;
+}
+
 export function describeDevice(ua: string): string {
   const os = /iPhone/.test(ua)
     ? "iPhone"
@@ -42,7 +50,7 @@ export function isOnline(dateStr: string): boolean {
   return diffMs >= 0 && diffMs < 10 * 60 * 1000;
 }
 
-/** Vráti slovenský popis relatívneho času: Online / Naposledy pred X min / Dnes o HH:mm */
+/** Vráti slovenský popis relatívneho času */
 export function formatLastSeen(dateStr: string): { label: string; isOnline: boolean } {
   const date = new Date(dateStr);
   const diffMs = Date.now() - date.getTime();
@@ -86,17 +94,50 @@ export async function recordLogin(userId: string, email: string) {
   }
 }
 
-/** Načíta posledných 30 prístupov do Nastavení */
-export async function listLogins(): Promise<LoginEvent[]> {
-  const { data } = await supabase
+/**
+ * Načíta prístupy s filtrom podľa obdobia a vynechaním vlastných prihlásení.
+ * Pre dané obdobie nenačítava len 30 záznamov, ale všetky (limit nastavený až na 500).
+ */
+export async function listLogins(options?: ListLoginsOptions): Promise<LoginEvent[]> {
+  const period = options?.period ?? "day";
+  let query = supabase
     .from("login_events")
-    .select("id,email,device,created_at")
-    .order("created_at", { ascending: false })
-    .limit(30);
-  return data ?? [];
+    .select("id,user_id,email,device,created_at")
+    .order("created_at", { ascending: false });
+
+  const now = new Date();
+  if (period === "day") {
+    // Od polnoci dnešného dňa
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    query = query.gte("created_at", startOfDay);
+  } else if (period === "week") {
+    // Posledných 7 dní
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    query = query.gte("created_at", sevenDaysAgo);
+  } else if (period === "month") {
+    // Posledných 30 dní
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    query = query.gte("created_at", thirtyDaysAgo);
+  }
+
+  // Zvýšený limit na 500 záznamov pre kompletný zoznam
+  query = query.limit(500);
+
+  const { data } = await query;
+  if (!data) return [];
+
+  const myUserId = options?.excludeUserId;
+  const myEmail = options?.excludeEmail?.toLowerCase().trim();
+
+  // Vyradenie vašich vlastných prihlásení
+  return data.filter((e) => {
+    if (myUserId && e.user_id === myUserId) return false;
+    if (myEmail && e.email && e.email.toLowerCase().trim() === myEmail) return false;
+    return true;
+  });
 }
 
-/** Načíta najnovší cudzí prístup pre príčinkové oznámenie v Prehľade */
+/** Načíta najnovší cudzí prístup */
 export async function getLatestForeignLogin(): Promise<LoginEvent | null> {
   const currentId = sessionStorage.getItem("george-current-login-id");
   const { data } = await supabase
