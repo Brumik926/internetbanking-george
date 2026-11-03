@@ -36,6 +36,100 @@ function iso(y: number, m: number, d: number) {
   return new Date(Date.UTC(y, m - 1, d, 10, 0, 0)).toISOString();
 }
 
+ndomness
+Step 1 Math.random()
+Source
+src/lib/bank-store.ts:41
+
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+Step 2 Math.random() * 10
+src/lib/bank-store.ts:41
+
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+Step 3 Math.fl ... ) * 10)
+src/lib/bank-store.ts:41
+
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+Step 4 digits
+src/lib/bank-store.ts:41
+
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+Step 5 digits
+src/lib/bank-store.ts:42
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+function seedTransactions(): Omit<Txn, "id">[] {
+Step 6 digits. ... 1,4}/g)
+src/lib/bank-store.ts:42
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+function seedTransactions(): Omit<Txn, "id">[] {
+Step 7 digits. ... ) ?? []
+src/lib/bank-store.ts:42
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+function seedTransactions(): Omit<Txn, "id">[] {
+Step 8 (digits ... ?? [])
+src/lib/bank-store.ts:42
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+function seedTransactions(): Omit<Txn, "id">[] {
+Step 9 (digits ... e(0, 3) [ArrayElement]
+src/lib/bank-store.ts:42
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+function seedTransactions(): Omit<Txn, "id">[] {
+Step 10 (digits ... in(" ")
+src/lib/bank-store.ts:42
+function randomIban() {
+  let digits = "";
+  for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
+  return `SK31 1200 ${(digits.match(/.{1,4}/g) ?? []).slice(0, 3).join(" ")}`;
+}
+
+function seedTransactions(): Omit<Txn, "id">[] {
+Step 11 `SK31 1 ... (" ")}`
+src/lib/bank-store.ts:42
 function randomIban() {
   let digits = "";
   for (let i = 0; i < 16; i++) digits += Math.floor(Math.random() * 10);
@@ -109,7 +203,7 @@ async function seedIfNeeded(userId: string) {
   if (error) throw error;
   if (profile?.seeded) return profile;
 
-  const iban = profile?.iban || randomIban();
+  const iban = profile?.iban || crypto.randomInt(10);
   const [txns, goals, budgets] = await Promise.all([
     supabase.from("transactions").insert(seedTransactions().map((txn) => ({
       user_id: userId, type: txn.type, counterparty: txn.counterparty, iban: txn.iban ?? null,
