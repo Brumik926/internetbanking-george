@@ -202,7 +202,7 @@ export async function addTransaction(txn: Omit<Txn, "id">) {
     paymentKeys.set(fingerprint, key);
     const { data, error } = await supabase.rpc("create_payment", {
       p_counterparty: txn.counterparty.trim(), p_iban: txn.iban ?? "", p_amount_cents: cents,
-      p_idempotency_key: key, p_category: txn.category, p_note: txn.note ?? undefined, p_vs: txn.vs ?? null,
+      p_idempotency_key: key, p_category: txn.category, p_note: txn.note ?? undefined, p_user_id: userId,
     });
     if (error || !data) {
       // Keep the key for a retry if the request outcome was uncertain.
