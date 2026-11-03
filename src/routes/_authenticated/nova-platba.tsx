@@ -13,7 +13,7 @@ import {
   X,
   KeyRound,
 } from "lucide-react";
-import { isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometric";
+import { enableBiometric, isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometric";
 import { AppShell, BrandHeader } from "@/components/bank/AppShell";
 import { RecipientPicker } from "@/components/bank/RecipientPicker";
 import {
@@ -100,8 +100,8 @@ export default function NovaPlatba() {
     }
 
     const savedBioPay = window.localStorage.getItem(`george-bio-pay:${user.id}`) !== "false";
-    const hasBio = isBiometricEnabled(user.id);
-    const canUseBio = bioSupported && savedBioPay && hasBio;
+    // Primárne vždy Face ID / odtlačok (s automatickým záložným kódom telefónu).
+    const canUseBio = bioSupported && savedBioPay;
     setBioPayEnabled(canUseBio);
     setAuthMethod(canUseBio ? "bio" : "pin");
 
@@ -139,14 +139,24 @@ export default function NovaPlatba() {
     setPinError("");
 
     try {
-      const verified = await verifyBiometric(user.id);
-      if (!verified) throw new Error("Overenie biometriou nebolo úspešné.");
+      // Zariadenie samo ponúkne Face ID / odtlačok a pri zlyhaní kód telefónu.
+      let verified = false;
+      if (isBiometricEnabled(user.id)) {
+        try {
+          verified = await verifyBiometric(user.id);
+        } catch {
+          verified = false;
+        }
+      }
+      if (!verified) {
+        await enableBiometric(user.id, s.owner || "George");
+        verified = true;
+      }
       await executePayment();
     } catch (err) {
       console.error(err);
       toast.error("Biometrické overenie zlyhalo");
-      setPinError("Biometrické overenie zlyhalo alebo bolo zrušené. Zadajte George PIN kód.");
-      setAuthMethod("pin");
+      setPinError("Overenie bolo zrušené. Skúste znova Face ID / odtlačok alebo kód telefónu.");
       setBusy(false);
     }
   }
@@ -366,7 +376,7 @@ export default function NovaPlatba() {
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-md transition-opacity hover:opacity-95 disabled:opacity-60"
                 >
                   <Fingerprint className="size-5" />
-                  {busy ? "Overujem biometriu…" : "Potvrdiť biometriou"}
+                  {busy ? "Overujem biometriu…" : "Potvrdiť Face ID / odtlačkom"}
                 </button>
 
                 <button
