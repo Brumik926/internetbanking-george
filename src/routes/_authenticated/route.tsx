@@ -1,6 +1,9 @@
 import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { recordLogin, setupLoginAlerts } from "@/lib/login-log";
+  useEffect(() => {
+    if (!user) return;
+    void recordLogin(user.id, user.email ?? "");
+  }, [user]);
 import { supabase } from "@/integrations/supabase/client";
 import { BiometricLock } from "@/components/bank/BiometricLock";
 import { PersistentBottomNav } from "@/components/bank/AppShell";
