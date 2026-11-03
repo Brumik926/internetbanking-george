@@ -1,8 +1,10 @@
 import { getLatestForeignLogin, formatLastSeen, type LoginEvent } from "@/lib/login-log";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Eye, EyeOff, BarChart3 } from "lucide-react";
 import {
+  Eye,
+  EyeOff,
+  BarChart3,
   Search,
   CreditCard,
   MoreVertical,
@@ -35,7 +37,7 @@ import {
   UserX,
   LogOut,
   ChevronRight,
-  Wifi
+  Wifi,
 } from "lucide-react";
 import { SlspLogo } from "@/components/bank/SlspLogo";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +49,7 @@ import {
   MONTHS,
   resetStore,
   useBank,
-  type Txn
+  type Txn,
 } from "@/lib/bank-store";
 
 export const Route = createFileRoute("/_authenticated/")({
@@ -275,20 +277,21 @@ export function GeorgePrehladModern() {
   const userName = s.owner;
 
   const [hidden, setHidden] = useState(false);
+  const [latestForeignAccess, setLatestForeignAccess] = useState<LoginEvent | null>(null);
+
   useEffect(() => {
     try {
       setHidden(localStorage.getItem("george-hide-balance") === "1");
     } catch {}
   }, []);
 
-  function toggleHidden() {
-    setHidden((prev) => {
-    const [latestForeignAccess, setLatestForeignAccess] = useState<LoginEvent | null>(null);
-
   useEffect(() => {
     void getLatestForeignLogin().then(setLatestForeignAccess);
-  }, [])    
-const next = !prev;
+  }, []);
+
+  function toggleHidden() {
+    setHidden((prev) => {
+      const next = !prev;
       try {
         localStorage.setItem("george-hide-balance", next ? "1" : "0");
       } catch {}
@@ -519,6 +522,46 @@ const next = !prev;
 
           {/* Hlavný obsah */}
           <main className="px-4 -mt-12 relative z-10">
+            {/* Príčinkové oznámenie o cudzom prístupe */}
+            {latestForeignAccess && (() => {
+              const status = formatLastSeen(latestForeignAccess.created_at);
+              return (
+                <Link
+                  to="/nastavenia"
+                  className="mb-4 flex items-center justify-between rounded-2xl p-3.5 bg-white dark:bg-[#1c1c24] shadow-sm border border-gray-100 dark:border-white/5 active:scale-[0.99] transition"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative w-9 h-9 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-[#196ee6] shrink-0">
+                      <Smartphone size={18} />
+                      {status.isOnline && (
+                        <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#1c1c24]" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[13px] font-bold text-gray-900 dark:text-white truncate">
+                          {latestForeignAccess.device}
+                        </span>
+                        <span
+                          className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                            status.isOnline
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300"
+                              : "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-gray-400"
+                          }`}
+                        >
+                          {status.label}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-400 dark:text-gray-500 truncate">
+                        {latestForeignAccess.email}
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight size={16} className="text-gray-400 shrink-0" />
+                </Link>
+              );
+            })()}
+
             {/* Sekcia: Výdavky a Príjmy za aktuálny mesiac */}
             <div className="grid grid-cols-2 gap-3 mb-5">
               <Link
@@ -593,8 +636,8 @@ const next = !prev;
                       {hidden ? "•••• € vlastné zdroje" : `${formatEur(total)} vlastné zdroje`}
                     </p>
                   </div>
-                    <SlspLogo size={52} />
-               </div>
+                  <SlspLogo size={52} />
+                </div>
               </Link>
 
               <div className="flex justify-between items-center mt-4">
