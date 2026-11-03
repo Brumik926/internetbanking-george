@@ -421,7 +421,7 @@ function LoginHistory() {
         </span>
       </div>
 
-      <div className="rounded-3xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-hidden">
+      <div className="rounded-3xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-y-auto max-h-[320px] overscroll-contain">
         {items === null ? (
           <p className="p-4 text-sm text-slate-400">Načítavam prístupy…</p>
         ) : items.length === 0 ? (

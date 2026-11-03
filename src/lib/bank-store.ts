@@ -200,10 +200,12 @@ export async function addTransaction(txn: Omit<Txn, "id">) {
     const fingerprint = JSON.stringify([userId, txn.counterparty.trim(), (txn.iban ?? "").replace(/\s/g, "").toUpperCase(), cents, txn.category, txn.note ?? null, txn.vs ?? null]);
     const key = paymentKeys.get(fingerprint) ?? crypto.randomUUID();
     paymentKeys.set(fingerprint, key);
-    const { data, error } = await supabase.rpc("create_payment", {
+    const paymentArgs = {
       p_counterparty: txn.counterparty.trim(), p_iban: txn.iban ?? "", p_amount_cents: cents,
-      p_idempotency_key: key, p_category: txn.category, p_note: txn.note ?? null, p_vs: txn.vs ?? null,
-    });
+      p_idempotency_key: key, p_category: txn.category, p_user_id: userId,
+      ...(txn.note ? { p_note: txn.note } : {}),
+    };
+    const { data, error } = await supabase.rpc("create_payment", paymentArgs);
     if (error || !data) {
       // Keep the key for a retry if the request outcome was uncertain.
       throw new Error(error?.message ?? "Platobný príkaz sa nepodarilo vytvoriť.");
