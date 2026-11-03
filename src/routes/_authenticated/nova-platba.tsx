@@ -13,7 +13,7 @@ import {
   X,
   KeyRound,
 } from "lucide-react";
-import { isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometric";
+import { enableBiometric, isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometric";
 import { AppShell, BrandHeader } from "@/components/bank/AppShell";
 import { RecipientPicker } from "@/components/bank/RecipientPicker";
 import {
@@ -100,8 +100,8 @@ export default function NovaPlatba() {
     }
 
     const savedBioPay = window.localStorage.getItem(`george-bio-pay:${user.id}`) !== "false";
-    const hasBio = isBiometricEnabled(user.id);
-    const canUseBio = bioSupported && savedBioPay && hasBio;
+    // Primárne vždy Face ID / odtlačok (s automatickým záložným kódom telefónu).
+    const canUseBio = bioSupported && savedBioPay;
     setBioPayEnabled(canUseBio);
     setAuthMethod(canUseBio ? "bio" : "pin");
 
@@ -139,8 +139,19 @@ export default function NovaPlatba() {
     setPinError("");
 
     try {
-      const verified = await verifyBiometric(user.id);
-      if (!verified) throw new Error("Overenie biometriou nebolo úspešné.");
+      // Zariadenie samo ponúkne Face ID / odtlačok a pri zlyhaní kód telefónu.
+      let verified = false;
+      if (isBiometricEnabled(user.id)) {
+        try {
+          verified = await verifyBiometric(user.id);
+        } catch {
+          verified = false;
+        }
+      }
+      if (!verified) {
+        await enableBiometric(user.id, s.owner || "George");
+        verified = true;
+      }
       await executePayment();
     } catch (err) {
       console.error(err);
