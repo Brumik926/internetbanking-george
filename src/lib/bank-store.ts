@@ -1,18 +1,47 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+import { fromCents, toCents } from "@/lib/money";
+
 export type Txn = {
   id: string;
   type: "in" | "out";
   counterparty: string;
   iban?: string | undefined;
-  amount: number;
-  date: string; // ISO
+  amount_cents: number;
+  date: string;
   category: string;
   note?: string | undefined;
   vs?: string | undefined;
+  status?: "pending" | "completed" | "failed";
 };
 
+export function balance(s: BankState) {
+  return s.transactions.reduce((acc, t) => {
+    const delta = t.type === "in" ? t.amount_cents : -t.amount_cents;
+    return acc + delta;
+  }, 0);
+}
+
+export function monthTotals(s: BankState, d = new Date()) {
+  let income = 0;
+  let expense = 0;
+
+  for (const t of s.transactions) {
+    if (!inMonth(t, d)) continue;
+    if (t.type === "in") income += t.amount_cents;
+    else expense += t.amount_cents;
+  }
+
+  return { income, expense };
+}
+
+export function formatEur(n: number) {
+  return new Intl.NumberFormat("sk-SK", {
+    style: "currency",
+    currency: "EUR",
+  }).format(fromCents(n));
+}
 export type Goal = {
   id: string;
   name: string;
