@@ -1,5 +1,4 @@
 import { validateIban, formatIban } from "@/lib/iban-validator";
-import { verifyUserPin } from "@/lib/pin-service";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -13,7 +12,7 @@ import {
   X,
   KeyRound,
 } from "lucide-react";
-import { isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometric";
+import { enableBiometric, isBiometricEnabled, isBiometricSupported, verifyBiometric } from "@/lib/biometric";
 import { AppShell, BrandHeader } from "@/components/bank/AppShell";
 import { RecipientPicker } from "@/components/bank/RecipientPicker";
 import {
@@ -64,22 +63,13 @@ export default function NovaPlatba() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [bioSupported, setBioSupported] = useState(false);
-  const [bioPayEnabled, setBioPayEnabled] = useState(false);
-  const [authMethod, setAuthMethod] = useState<"bio" | "pin">("bio");
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState("");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
 
   useEffect(() => {
-    void isBiometricSupported().then((supported) => {
-      setBioSupported(supported);
-      const savedBioPay = window.localStorage.getItem(`george-bio-pay:${user.id}`) !== "false";
-      const hasBio = isBiometricEnabled(user.id);
-      const canUseBio = supported && savedBioPay && hasBio;
-      setBioPayEnabled(canUseBio);
-      setAuthMethod(canUseBio ? "bio" : "pin");
-    });
+    void isBiometricSupported().then(setBioSupported);
   }, [user.id]);
 
   const value = Number(amount.replace(",", "."));
@@ -98,12 +88,6 @@ export default function NovaPlatba() {
     if (!ibanCheck.valid) {
       return setError(ibanCheck.error ?? "Neplatný IBAN príjemcu.");
     }
-
-    const savedBioPay = window.localStorage.getItem(`george-bio-pay:${user.id}`) !== "false";
-    const hasBio = isBiometricEnabled(user.id);
-    const canUseBio = bioSupported && savedBioPay && hasBio;
-    setBioPayEnabled(canUseBio);
-    setAuthMethod(canUseBio ? "bio" : "pin");
 
     setShowConfirmModal(true);
   }
@@ -139,40 +123,17 @@ export default function NovaPlatba() {
     setPinError("");
 
     try {
-      const verified = await verifyBiometric(user.id);
-      if (!verified) throw new Error("Overenie biometriou nebolo úspešné.");
-      await executePayment();
-    } catch (err) {
-      console.error(err);
-      toast.error("Biometrické overenie zlyhalo");
-      setPinError("Biometrické overenie zlyhalo alebo bolo zrušené. Zadajte George PIN kód.");
-      setAuthMethod("pin");
-      setBusy(false);
-    }
-  }
-
-  async function confirmWithPin(e?: React.FormEvent) {
-    if (e) e.preventDefault();
-    setPinError("");
-
-    if (!pin.trim()) {
-      setPinError("Zadajte George PIN kód.");
-      return;
-    }
-
-    setBusy(true);
-    try {
-      const check = await verifyUserPin(user.id, pin);
-      if (!check.valid) {
-        setPinError(check.error ?? "Nesprávny PIN kód.");
-        setBusy(false);
-        return;
+      // Zámok telefónu (kód / odtlačok / Face ID). Pri prvej platbe sa zariadenie automaticky zaregistruje.
+      if (isBiometricEnabled(user.id)) {
+        const verified = await verifyBiometric(user.id);
+        if (!verified) throw new Error("Overenie nebolo úspešné.");
+      } else {
+        await enableBiometric(user.id, s.owner || "George");
       }
-
       await executePayment();
     } catch (err) {
       console.error(err);
-      setPinError("Pri overovaní PIN došlo k chybe.");
+      setPinError("Overenie zámkom telefónu zlyhalo alebo bolo zrušené. Skúste znova.");
       setBusy(false);
     }
   }
@@ -357,8 +318,8 @@ export default function NovaPlatba() {
               )}
             </div>
 
-            {authMethod === "bio" ? (
-              <div className="space-y-2">
+            <div className="space-y-2">
+              {bioSupported ? (
                 <button
                   type="button"
                   onClick={confirmWithBiometrics}
@@ -366,81 +327,23 @@ export default function NovaPlatba() {
                   className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-md transition-opacity hover:opacity-95 disabled:opacity-60"
                 >
                   <Fingerprint className="size-5" />
-                  {busy ? "Overujem biometriu…" : "Potvrdiť biometriou"}
+                  {busy ? "Overujem…" : "Potvrdiť zámkom telefónu"}
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => setAuthMethod("pin")}
-                  disabled={busy}
-                  className="h-10 w-full text-center text-xs font-semibold text-primary hover:underline"
-                >
-                  Použiť George PIN kód
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmModal(false)}
-                  disabled={busy}
-                  className="h-11 w-full rounded-2xl bg-transparent text-[13px] font-semibold text-muted-foreground hover:bg-surface-2"
-                >
-                  Zrušiť
-                </button>
-              </div>
-            ) : (
-              <form onSubmit={confirmWithPin} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-muted-foreground mb-1">
-                    Zadajte George PIN kód
-                  </label>
-                  <input
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={6}
-                    autoFocus
-                    placeholder="••••"
-                    value={pin}
-                    onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                    className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] outline-none focus:border-primary"
-                  />
-                  {pinError && (
-                    <p className="mt-1.5 text-xs text-destructive text-center">{pinError}</p>
-                  )}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={busy || pin.length < 4}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-semibold text-primary-foreground shadow-md transition-opacity hover:opacity-95 disabled:opacity-60"
-                >
-                  <ShieldCheck className="size-5" />
-                  {busy ? "Autorizujem…" : "Autorizovať platbu"}
-                </button>
-
-                {bioPayEnabled && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPinError("");
-                      setAuthMethod("bio");
-                    }}
-                    disabled={busy}
-                    className="h-8 w-full text-center text-xs font-semibold text-primary hover:underline"
-                  >
-                    Späť na overenie biometriou
-                  </button>
-                )}
-
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmModal(false)}
-                  disabled={busy}
-                  className="h-10 w-full rounded-2xl bg-transparent text-[13px] font-semibold text-muted-foreground hover:bg-surface-2"
-                >
-                  Zrušiť
-                </button>
-              </form>
-            )}
+              ) : (
+                <p className="text-center text-xs text-destructive">
+                  Toto zariadenie nepodporuje overenie zámkom obrazovky. Zapnite v telefóne kód, odtlačok prsta alebo Face ID.
+                </p>
+              )}
+              {pinError && <p className="text-center text-xs text-destructive">{pinError}</p>}
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={busy}
+                className="h-11 w-full rounded-2xl bg-transparent text-[13px] font-semibold text-muted-foreground hover:bg-surface-2"
+              >
+                Zrušiť
+              </button>
+            </div>
           </div>
         </div>
       )}
