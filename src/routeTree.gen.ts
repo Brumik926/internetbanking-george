@@ -20,6 +20,7 @@ import { Route as AuthenticatedNastaveniaRouteImport } from './routes/_authentic
 import { Route as AuthenticatedNovaPlatbaRouteImport } from './routes/_authenticated/nova-platba'
 import { Route as AuthenticatedPlatbyRouteImport } from './routes/_authenticated/platby'
 import { Route as AuthenticatedPrijatRouteImport } from './routes/_authenticated/prijat'
+import { Route as AuthenticatedProtokolPristupovRouteImport } from './routes/_authenticated/protokol-pristupov'
 import { Route as AuthenticatedRozpocetRouteImport } from './routes/_authenticated/rozpocet'
 import { Route as AuthenticatedSporenieRouteImport } from './routes/_authenticated/sporenie'
 import { Route as AuthenticatedUpozorneniaRouteImport } from './routes/_authenticated/upozornenia'
@@ -82,6 +83,12 @@ const AuthenticatedPrijatRoute = AuthenticatedPrijatRouteImport.update({
   path: '/prijat',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedProtokolPristupovRoute =
+  AuthenticatedProtokolPristupovRouteImport.update({
+    id: '/protokol-pristupov',
+    path: '/protokol-pristupov',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedRozpocetRoute = AuthenticatedRozpocetRouteImport.update({
   id: '/rozpocet',
   path: '/rozpocet',
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/nova-platba': typeof AuthenticatedNovaPlatbaRoute
   '/platby': typeof AuthenticatedPlatbyRoute
   '/prijat': typeof AuthenticatedPrijatRoute
+  '/protokol-pristupov': typeof AuthenticatedProtokolPristupovRoute
   '/rozpocet': typeof AuthenticatedRozpocetRoute
   '/sporenie': typeof AuthenticatedSporenieRoute
   '/upozornenia': typeof AuthenticatedUpozorneniaRoute
@@ -137,6 +145,7 @@ export interface FileRoutesByTo {
   '/nova-platba': typeof AuthenticatedNovaPlatbaRoute
   '/platby': typeof AuthenticatedPlatbyRoute
   '/prijat': typeof AuthenticatedPrijatRoute
+  '/protokol-pristupov': typeof AuthenticatedProtokolPristupovRoute
   '/rozpocet': typeof AuthenticatedRozpocetRoute
   '/sporenie': typeof AuthenticatedSporenieRoute
   '/upozornenia': typeof AuthenticatedUpozorneniaRoute
@@ -156,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/nova-platba': typeof AuthenticatedNovaPlatbaRoute
   '/_authenticated/platby': typeof AuthenticatedPlatbyRoute
   '/_authenticated/prijat': typeof AuthenticatedPrijatRoute
+  '/_authenticated/protokol-pristupov': typeof AuthenticatedProtokolPristupovRoute
   '/_authenticated/rozpocet': typeof AuthenticatedRozpocetRoute
   '/_authenticated/sporenie': typeof AuthenticatedSporenieRoute
   '/_authenticated/upozornenia': typeof AuthenticatedUpozorneniaRoute
@@ -176,6 +186,7 @@ export interface FileRouteTypes {
     | '/nova-platba'
     | '/platby'
     | '/prijat'
+    | '/protokol-pristupov'
     | '/rozpocet'
     | '/sporenie'
     | '/upozornenia'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/nova-platba'
     | '/platby'
     | '/prijat'
+    | '/protokol-pristupov'
     | '/rozpocet'
     | '/sporenie'
     | '/upozornenia'
@@ -210,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/nova-platba'
     | '/_authenticated/platby'
     | '/_authenticated/prijat'
+    | '/_authenticated/protokol-pristupov'
     | '/_authenticated/rozpocet'
     | '/_authenticated/sporenie'
     | '/_authenticated/upozornenia'
@@ -305,6 +318,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPrijatRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/protokol-pristupov': {
+      id: '/_authenticated/protokol-pristupov'
+      path: '/protokol-pristupov'
+      fullPath: '/protokol-pristupov'
+      preLoaderRoute: typeof AuthenticatedProtokolPristupovRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/rozpocet': {
       id: '/_authenticated/rozpocet'
       path: '/rozpocet'
@@ -350,6 +370,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNovaPlatbaRoute: typeof AuthenticatedNovaPlatbaRoute
   AuthenticatedPlatbyRoute: typeof AuthenticatedPlatbyRoute
   AuthenticatedPrijatRoute: typeof AuthenticatedPrijatRoute
+  AuthenticatedProtokolPristupovRoute: typeof AuthenticatedProtokolPristupovRoute
   AuthenticatedRozpocetRoute: typeof AuthenticatedRozpocetRoute
   AuthenticatedSporenieRoute: typeof AuthenticatedSporenieRoute
   AuthenticatedUpozorneniaRoute: typeof AuthenticatedUpozorneniaRoute
@@ -364,6 +385,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNovaPlatbaRoute: AuthenticatedNovaPlatbaRoute,
   AuthenticatedPlatbyRoute: AuthenticatedPlatbyRoute,
   AuthenticatedPrijatRoute: AuthenticatedPrijatRoute,
+  AuthenticatedProtokolPristupovRoute: AuthenticatedProtokolPristupovRoute,
   AuthenticatedRozpocetRoute: AuthenticatedRozpocetRoute,
   AuthenticatedSporenieRoute: AuthenticatedSporenieRoute,
   AuthenticatedUpozorneniaRoute: AuthenticatedUpozorneniaRoute,
