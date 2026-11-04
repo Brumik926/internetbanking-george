@@ -289,7 +289,7 @@ export default function NovaPlatba() {
           <div className="w-full max-w-[400px] rounded-3xl bg-surface p-6 shadow-2xl">
             <div className="text-center">
               <div className="mx-auto grid size-14 place-items-center rounded-full bg-primary/15 text-primary">
-                {authMethod === "bio" ? <Fingerprint className="size-8" /> : <KeyRound className="size-8" />}
+                <Fingerprint className="size-8" />
               </div>
               <h2 className="mt-3 text-[18px] font-bold">Potvrdenie platby</h2>
               <p className="mt-1 text-[13px] text-muted-foreground">
