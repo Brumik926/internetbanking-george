@@ -15,15 +15,15 @@ import {
   Edit2,
   Check,
   X,
-  Smartphone
+  ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { resetStore, saveProfile, useBank } from "@/lib/bank-store";
+import { isPrimaryEmail } from "@/lib/primary-accounts";
 import { resetNotifications, unreadCount, useNotifications } from "@/lib/notifications";
 import { useTheme } from "@/lib/theme";
-import { listLogins, type LoginEvent } from "@/lib/login-log";
 import {
   clearUnlocked,
   disableBiometric,
@@ -52,18 +52,22 @@ function Nastavenia() {
   const s = useBank();
   const notifs = useNotifications();
   const unread = unreadCount(notifs);
+  const [isPrimary, setIsPrimary] = useState(false);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setIsPrimary(isPrimaryEmail(data.user?.email));
+    });
+  }, []);
 
   // Profilové údaje
   const [owner, setOwner] = useState("");
   const [iban, setIban] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
-    if (isEditing) return;
-    setOwner(s.owner);
-    setIban(s.iban);
-  }, [s.owner, s.iban, isEditing]);
+    setOwner(s.owner || "Tomáš Lizák");
+    setIban(s.iban || "SK31 1200 3545 0984 0539");
+  }, [s.owner, s.iban]);
 
   // Téma (Denný / Nočný režim) — spravuje ThemeProvider v koreni
   const { isLight: light, toggleTheme } = useTheme();
@@ -124,16 +128,9 @@ function Nastavenia() {
   }
 
   async function handleSaveProfile() {
-    setProfileSaving(true);
-    try {
-      await saveProfile(owner.trim(), iban.trim());
-      setIsEditing(false);
-      toast.success("Údaje účtu boli uložené");
-    } catch {
-      toast.error("Údaje účtu sa nepodarilo uložiť. Skúste to znova.");
-    } finally {
-      setProfileSaving(false);
-    }
+    await saveProfile(owner.trim(), iban.trim());
+    setIsEditing(false);
+    toast.success("Údaje účtu boli uložené");
   }
 
   async function signOut() {
@@ -161,7 +158,7 @@ function Nastavenia() {
           Nastavenia
         </h1>
         <p className="text-[16px] text-white/80 font-medium">
-          {s.owner}
+          {owner}
         </p>
       </div>
 
@@ -224,6 +221,16 @@ function Nastavenia() {
             </div>
             <ChevronRight className="w-5 h-5 text-slate-400" />
           </Link>
+
+          {isPrimary && (
+            <Link to="/protokol-pristupov" className="flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition">
+              <div className="flex items-center gap-3.5">
+                <ShieldCheck className="w-5 h-5 text-[#196ee6] dark:text-[#38bdf8]" />
+                <span className="text-[15px] font-semibold">Protokol prístupov</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-slate-400" />
+            </Link>
+          )}
         </div>
 
         {/* VZHĽAD */}
@@ -317,9 +324,6 @@ function Nastavenia() {
           </div>
         </div>
 
-        <LoginHistory />
-
-
         {/* MÔJ ÚČET */}
         <div>
           <div className="flex items-center justify-between px-1 mb-2">
@@ -329,7 +333,6 @@ function Nastavenia() {
             <button
               type="button"
               onClick={() => setIsEditing(!isEditing)}
-              disabled={s.loading || profileSaving}
               className="text-[13px] font-semibold text-[#196ee6] dark:text-[#38bdf8] hover:underline"
             >
               {isEditing ? "Zrušiť" : "Upraviť"}
@@ -342,7 +345,6 @@ function Nastavenia() {
                 <div>
                   <label className="text-xs text-slate-400 dark:text-zinc-500 font-medium">Meno majiteľa</label>
                   <input
-                    aria-label="Meno majiteľa"
                     type="text"
                     value={owner}
                     onChange={(e) => setOwner(e.target.value)}
@@ -352,7 +354,6 @@ function Nastavenia() {
                 <div>
                   <label className="text-xs text-slate-400 dark:text-zinc-500 font-medium">IBAN</label>
                   <input
-                    aria-label="IBAN účtu"
                     type="text"
                     value={iban}
                     onChange={(e) => setIban(e.target.value)}
@@ -362,17 +363,16 @@ function Nastavenia() {
                 <button
                   type="button"
                   onClick={handleSaveProfile}
-                  disabled={profileSaving}
                   className="w-full py-2.5 rounded-xl bg-[#196ee6] text-white font-semibold text-sm active:scale-98 transition"
                 >
-                  {profileSaving ? "Ukladám…" : "Uložiť zmeny"}
+                  Uložiť zmeny
                 </button>
               </div>
             ) : (
               <>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-400 dark:text-zinc-500">Vlastník</span>
-                  <span className="font-semibold text-slate-900 dark:text-white">{s.owner}</span>
+                  <span className="font-semibold text-slate-900 dark:text-white">{owner}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-slate-400 dark:text-zinc-500">IBAN</span>
@@ -397,45 +397,6 @@ function Nastavenia() {
           <span>Odhlásiť sa</span>
         </button>
 
-      </div>
-    </div>
-  );
-}
-
-function LoginHistory() {
-  const [items, setItems] = useState<LoginEvent[] | null>(null);
-  useEffect(() => {
-    void listLogins().then(setItems);
-  }, []);
-  const fmt = (d: string) =>
-    new Date(d).toLocaleString("sk-SK", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" });
-  return (
-    <div>
-      <h2 className="text-[11px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase px-1 mb-2">
-        Posledné prístupy
-      </h2>
-      <div className="rounded-3xl bg-white dark:bg-[#161a23] shadow-sm border border-slate-100 dark:border-zinc-800/60 divide-y divide-slate-100 dark:divide-zinc-800/60 overflow-hidden">
-        {items === null ? (
-          <p className="p-4 text-sm text-slate-400">Načítavam…</p>
-        ) : items.length === 0 ? (
-          <p className="p-4 text-sm text-slate-400">Zatiaľ žiadne záznamy</p>
-        ) : (
-          items.map((e, i) => (
-            <div key={e.id} className="p-4 flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-[#196ee6] dark:text-[#38bdf8]">
-                <Smartphone className="w-5 h-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-semibold truncate">{e.device}</p>
-                <p className="text-[12px] text-slate-400 dark:text-zinc-500 truncate">{e.email}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[12px] font-medium">{fmt(e.created_at)}</p>
-                {i === 0 && <p className="text-[11px] font-semibold text-emerald-500">Najnovší</p>}
-              </div>
-            </div>
-          ))
-        )}
       </div>
     </div>
   );
