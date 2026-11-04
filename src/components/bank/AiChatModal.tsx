@@ -102,7 +102,7 @@ export function AiChatButton() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-sm leading-tight">George AI Asistent</h3>
-                  <p className="text-[11px] text-muted-foreground">Claude 3.5 Sonnet • Zabudovaná AI brána</p>
+                  <p className="text-[11px] text-muted-foreground">Lovable AI • Claude Sonnet 5</p>
                 </div>
               </div>
               <button
