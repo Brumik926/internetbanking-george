@@ -8,7 +8,15 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-
+import {
+  Outlet,
+  Link,
+  createRootRouteWithContext,
+  useRouter,
+  HeadContent,
+  Scripts,
+  redirect,
+} from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { resetStore } from "@/lib/bank-store";
@@ -78,8 +86,13 @@ function ErrorComponent({ error, reset }: import("@tanstack/react-router").Error
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
+  beforeLoad: ({ location }) => {
+    if (location.pathname === "/index") {
+      throw redirect({ to: "/", replace: true });
+    }
+  },
   head: () => ({
-    meta: [
+        meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#2F74E8" },
