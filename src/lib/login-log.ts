@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { isPrimaryEmail } from "@/lib/accounts";
 
 export type LoginEvent = {
   id: string;
@@ -36,8 +37,11 @@ export function describeDevice(ua: string): string {
   return `${os} · ${br}`;
 }
 
-/** Ticho zaznamená jeden prístup za reláciu prehliadača (otvorenie aplikácie). */
+/** Ticho zaznamená prístup cudzieho používateľa. Vaše 2 administrátorské účty sa nezaznamenávajú. */
 export async function recordLogin(userId: string, email: string) {
+  // Ak ide o vaše primárne účty, do záznamu sa nezapisujú
+  if (isPrimaryEmail(email)) return;
+
   const key = `george-login-logged:${userId}`;
   if (sessionStorage.getItem(key)) return;
   sessionStorage.setItem(key, "1");
@@ -47,12 +51,12 @@ export async function recordLogin(userId: string, email: string) {
     .insert({ user_id: userId, email, device });
 }
 
-/** Načíta posledných 30 prístupov pre zobrazenie v Nastaveniach. */
+/** Načíta posledné prístupy cudzích používateľov. */
 export async function listLogins(): Promise<LoginEvent[]> {
   const { data } = await supabase
     .from("login_events")
     .select("id,email,device,created_at")
     .order("created_at", { ascending: false })
     .limit(30);
-  return data ?? [];
+  return (data ?? []).filter((e) => !isPrimaryEmail(e.email));
 }
