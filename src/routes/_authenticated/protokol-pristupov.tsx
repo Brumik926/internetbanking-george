@@ -1,9 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Monitor } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { isPrimaryEmail } from "@/lib/accounts";
 
 export const Route = createFileRoute("/_authenticated/protokol-pristupov")({
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!isPrimaryEmail(data.user?.email)) {
+      throw redirect({ to: "/nastavenia", replace: true });
+    }
+  },
   head: () => ({
     meta: [
       { title: "Protokol prístupov · George" },
@@ -37,7 +44,8 @@ function ProtokolPristupov() {
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) throw error;
-      return data ?? [];
+      // Zabezpečí, že vaše 2 e-maily neuvidíte v zozname ani zo starších záznamov
+      return (data ?? []).filter((e) => !isPrimaryEmail(e.email));
     },
   });
 
@@ -59,7 +67,7 @@ function ProtokolPristupov() {
           {isLoading && <p className="p-5 text-[15px] text-slate-500">Načítavam…</p>}
           {error && <p className="p-5 text-[15px] text-red-600">Protokol sa nepodarilo načítať.</p>}
           {data && data.length === 0 && (
-            <p className="p-5 text-[15px] text-slate-500">Žiadne záznamy alebo nemáš oprávnenie.</p>
+            <p className="p-5 text-[15px] text-slate-500">Žiadne cudzie prístupy.</p>
           )}
           {data?.map((e) => (
             <div key={e.id} className="flex items-start gap-3.5 p-4">
