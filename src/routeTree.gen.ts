@@ -22,7 +22,6 @@ import { Route as AuthenticatedPlatbyRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedPrijatRouteImport } from './routes/_authenticated/prijat'
 import { Route as AuthenticatedRozpocetRouteImport } from './routes/_authenticated/rozpocet'
 import { Route as AuthenticatedSporenieRouteImport } from './routes/_authenticated/sporenie'
-import { Route as AuthenticatedSvetovyCasRouteImport } from './routes/_authenticated/svetovy-cas'
 import { Route as AuthenticatedUpozorneniaRouteImport } from './routes/_authenticated/upozornenia'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedTransakciaIdRouteImport } from './routes/_authenticated/transakcia.$id'
@@ -93,11 +92,6 @@ const AuthenticatedSporenieRoute = AuthenticatedSporenieRouteImport.update({
   path: '/sporenie',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedSvetovyCasRoute = AuthenticatedSvetovyCasRouteImport.update({
-  id: '/svetovy-cas',
-  path: '/svetovy-cas',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedUpozorneniaRoute =
   AuthenticatedUpozorneniaRouteImport.update({
     id: '/upozornenia',
@@ -129,7 +123,6 @@ export interface FileRoutesByFullPath {
   '/prijat': typeof AuthenticatedPrijatRoute
   '/rozpocet': typeof AuthenticatedRozpocetRoute
   '/sporenie': typeof AuthenticatedSporenieRoute
-  '/svetovy-cas': typeof AuthenticatedSvetovyCasRoute
   '/upozornenia': typeof AuthenticatedUpozorneniaRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/transakcia/$id': typeof AuthenticatedTransakciaIdRoute
@@ -146,7 +139,6 @@ export interface FileRoutesByTo {
   '/prijat': typeof AuthenticatedPrijatRoute
   '/rozpocet': typeof AuthenticatedRozpocetRoute
   '/sporenie': typeof AuthenticatedSporenieRoute
-  '/svetovy-cas': typeof AuthenticatedSvetovyCasRoute
   '/upozornenia': typeof AuthenticatedUpozorneniaRoute
   '/': typeof AuthenticatedIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -166,7 +158,6 @@ export interface FileRoutesById {
   '/_authenticated/prijat': typeof AuthenticatedPrijatRoute
   '/_authenticated/rozpocet': typeof AuthenticatedRozpocetRoute
   '/_authenticated/sporenie': typeof AuthenticatedSporenieRoute
-  '/_authenticated/svetovy-cas': typeof AuthenticatedSvetovyCasRoute
   '/_authenticated/upozornenia': typeof AuthenticatedUpozorneniaRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -187,7 +178,6 @@ export interface FileRouteTypes {
     | '/prijat'
     | '/rozpocet'
     | '/sporenie'
-    | '/svetovy-cas'
     | '/upozornenia'
     | '/.lovable/oauth/consent'
     | '/transakcia/$id'
@@ -204,7 +194,6 @@ export interface FileRouteTypes {
     | '/prijat'
     | '/rozpocet'
     | '/sporenie'
-    | '/svetovy-cas'
     | '/upozornenia'
     | '/'
     | '/.lovable/oauth/consent'
@@ -223,7 +212,6 @@ export interface FileRouteTypes {
     | '/_authenticated/prijat'
     | '/_authenticated/rozpocet'
     | '/_authenticated/sporenie'
-    | '/_authenticated/svetovy-cas'
     | '/_authenticated/upozornenia'
     | '/_authenticated/'
     | '/.lovable/oauth/consent'
@@ -331,13 +319,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSporenieRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/svetovy-cas': {
-      id: '/_authenticated/svetovy-cas'
-      path: '/svetovy-cas'
-      fullPath: '/svetovy-cas'
-      preLoaderRoute: typeof AuthenticatedSvetovyCasRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/upozornenia': {
       id: '/_authenticated/upozornenia'
       path: '/upozornenia'
@@ -371,7 +352,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPrijatRoute: typeof AuthenticatedPrijatRoute
   AuthenticatedRozpocetRoute: typeof AuthenticatedRozpocetRoute
   AuthenticatedSporenieRoute: typeof AuthenticatedSporenieRoute
-  AuthenticatedSvetovyCasRoute: typeof AuthenticatedSvetovyCasRoute
   AuthenticatedUpozorneniaRoute: typeof AuthenticatedUpozorneniaRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedTransakciaIdRoute: typeof AuthenticatedTransakciaIdRoute
@@ -386,7 +366,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPrijatRoute: AuthenticatedPrijatRoute,
   AuthenticatedRozpocetRoute: AuthenticatedRozpocetRoute,
   AuthenticatedSporenieRoute: AuthenticatedSporenieRoute,
-  AuthenticatedSvetovyCasRoute: AuthenticatedSvetovyCasRoute,
   AuthenticatedUpozorneniaRoute: AuthenticatedUpozorneniaRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedTransakciaIdRoute: AuthenticatedTransakciaIdRoute,
