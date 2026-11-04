@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Overiť asistenta cez Lovable AI a odstrániť nepoužívaný ANTHROPIC_API_KEY.
+- [x] Overiť asistenta cez Lovable AI a odstrániť nepoužívaný ANTHROPIC_API_KEY; odpoveď overená v prihlásenom chate.
 
 - [x] Zjednotiť meno majiteľa podľa uloženého profilu; testy synchronizácie a neúspešného uloženia prešli.
 - [ ] Overiť zmenu mena cez prihlásený náhľad — čaká na prihlásenie používateľa, automatické prihlásenie nie je dostupné.
