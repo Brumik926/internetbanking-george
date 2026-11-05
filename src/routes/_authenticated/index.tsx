@@ -214,14 +214,7 @@ function MerchantLogo({ counterparty, category }: { counterparty: string; catego
     );
   }
 
-  const initials = getInitials(counterparty);
-  const colorClass = getAvatarColor(counterparty);
-
-  return (
-    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 font-bold text-[14px] shadow-sm select-none tracking-tight ${colorClass}`}>
-      {initials}
-    </div>
-  );
+  return <SlspLogo size={40} />;
 }
 
 interface ListItemProps {
